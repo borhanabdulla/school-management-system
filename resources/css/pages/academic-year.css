@@ -1,0 +1,34 @@
+/* Academic Year Manager Specific Styles */
+
+.academic-header {
+    @apply relative overflow-hidden rounded-2xl shadow-xl p-8 transition-all duration-500;
+    @apply bg-gradient-to-r from-primary to-accent;
+    @apply border border-transparent dark:border-border;
+}
+
+.academic-header::before {
+    content: '';
+    @apply absolute inset-0 bg-black opacity-10 dark:opacity-30;
+}
+
+.academic-stat-card {
+    @apply flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold shadow-md;
+    @apply bg-gradient-to-br from-primary to-accent;
+}
+
+/* Custom Animations */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}

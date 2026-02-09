@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('financial_closing_logs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('academic_year_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('closed_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('closed_at');
+            $table->string('reason')->nullable();
+            $table->json('report_snapshot'); // The big JSON blob
+            $table->string('report_version')->default('v1');
+            $table->string('snapshot_hash', 64)->nullable(); // SHA256
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('financial_closing_logs');
+    }
+};

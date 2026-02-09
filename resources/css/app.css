@@ -1,0 +1,589 @@
+/* Import Google Fonts for Premium Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none !important;
+}
+
+:root {
+    /* Modern Gradient Colors */
+    --gradient-purple-blue-start: 147 51 234;
+    /* Purple 600 */
+    --gradient-purple-blue-end: 37 99 235;
+    /* Blue 600 */
+
+    --gradient-green-teal-start: 34 197 94;
+    /* Green 500 */
+    --gradient-green-teal-end: 20 184 166;
+    /* Teal 500 */
+
+    --gradient-orange-pink-start: 249 115 22;
+    /* Orange 500 */
+    --gradient-orange-pink-end: 236 72 153;
+    /* Pink 500 */
+
+    --gradient-red-purple-start: 239 68 68;
+    /* Red 500 */
+    --gradient-red-purple-end: 168 85 247;
+    /* Purple 500 */
+
+    --gradient-dark-gold-start: 30 41 59;
+    /* Slate 800 */
+    --gradient-dark-gold-end: 15 23 42;
+    /* Slate 900 */
+
+    --gradient-gold-amber-start: 251 191 36;
+    /* Amber 400 */
+    --gradient-gold-amber-end: 245 158 11;
+    /* Amber 500 */
+
+    --gradient-midnight-start: 15 23 42;
+    /* Slate 900 */
+    --gradient-midnight-end: 30 58 138;
+    /* Blue 900 */
+
+    /* Primary Colors */
+    --color-primary: 99 102 241;
+    /* Indigo 500 */
+    --color-secondary: 100 116 139;
+    /* Slate 500 */
+    --color-accent: 236 72 153;
+    /* Pink 500 */
+
+    /* State Colors */
+    --color-success: 34 197 94;
+    /* Green 500 */
+    --color-warning: 234 179 8;
+    /* Yellow 500 */
+    --color-danger: 239 68 68;
+    /* Red 500 */
+    --color-info: 59 130 246;
+    /* Blue 500 */
+
+    /* Layout Colors */
+    --color-surface: 255 255 255;
+    /* White */
+    --color-white: 255 255 255;
+    /* White */
+    --color-black: 0 0 0;
+    /* Black */
+    --color-background: 248 250 252;
+    /* Slate 50 */
+    --color-text-primary: 15 23 42;
+    /* Slate 900 */
+    --color-text-secondary: 71 85 105;
+    /* Slate 600 */
+    --color-foreground: 15 23 42;
+    /* Alias for text-primary */
+    --color-muted-foreground: 71 85 105;
+    /* Alias for text-secondary */
+    --color-border: 226 232 240;
+    /* Slate 200 */
+    --scrollbar-track: 148 163 184;
+    /* Slate 400 */
+
+    /* Sidebar Tokens */
+    --sidebar-link: 203 213 225;
+    /* Slate 300 */
+    --sidebar-link-hover: 241 245 249;
+    /* Slate 50 */
+    --sidebar-link-active: 255 255 255;
+    /* White */
+    --sidebar-submenu-link: 148 163 184;
+    /* Slate 400 */
+    --sidebar-submenu-link-hover: 226 232 240;
+    /* Slate 200 */
+    --sidebar-divider: 100 116 139;
+    /* Slate 500 */
+    --sidebar-border: 148 163 184;
+    /* Slate 400 */
+    --sidebar-header-bg: 99 102 241;
+    /* Indigo 500 */
+    --sidebar-footer-bg: 0 0 0;
+    /* Black */
+    --sidebar-overlay: 0 0 0;
+    /* Black */
+    --sidebar-scrollbar: 99 102 241;
+    /* Indigo 500 */
+    --sidebar-badge-start: 239 68 68;
+    /* Red 500 */
+    --sidebar-badge-end: 220 38 38;
+    /* Red 600 */
+    --sidebar-active-shadow: 99 102 241;
+    /* Indigo 500 */
+    --sidebar-active-gradient-start: 99 102 241;
+    /* Indigo 500 */
+    --sidebar-active-gradient-end: 139 92 246;
+    /* Violet 500 */
+
+    /* Form Tokens */
+    --form-input-border: 203 213 225;
+    /* Slate 300 */
+    --form-label: 51 65 85;
+    /* Slate 700 */
+    --form-select-border: 209 213 219;
+    /* Gray 300 */
+
+    /* Modal Tokens */
+    --modal-overlay: 107 114 128;
+    /* Gray 500 */
+    --modal-overlay-dark: 17 24 39;
+    /* Gray 900 */
+    --modal-surface-dark: 31 41 55;
+    /* Gray 800 */
+    --modal-title: 17 24 39;
+    /* Gray 900 */
+    --modal-title-dark: 243 244 246;
+    /* Gray 100 */
+    --modal-text: 75 85 99;
+    /* Gray 600 */
+    --modal-text-dark: 156 163 175;
+    /* Gray 400 */
+    --modal-footer: 243 244 246;
+    /* Gray 100 */
+
+    /* Chart Tokens */
+    --chart-title: 51 65 85;
+    /* Slate 700 */
+    --chart-center: 17 24 39;
+    /* Slate 900 */
+
+    /* Print Tokens */
+    --print-border: 51 51 51;
+    /* Gray 900 */
+    --print-muted: 102 102 102;
+    /* Gray 600 */
+    --print-table-header: 240 240 240;
+    /* Gray 100 */
+    --print-button: 37 99 235;
+    /* Blue 600 */
+    --print-button-hover: 29 78 216;
+    /* Blue 700 */
+
+    /* Error Tokens */
+    --error-text: 99 107 111;
+    /* Gray 500 */
+}
+
+.dark {
+    /* Primary Colors - Tuned for midnight palette */
+    --color-primary: 122 143 255;
+    /* Periwinkle */
+    --color-secondary: 148 163 204;
+    /* Blue-gray */
+    --color-accent: 96 130 255;
+    /* Azure */
+
+    /* Layout Colors */
+    --color-surface: 22 30 58;
+    /* Deep navy */
+    --color-background: 12 16 32;
+    /* Midnight */
+    --color-text-primary: 232 237 255;
+    /* Soft white */
+    --color-text-secondary: 158 174 210;
+    /* Muted blue */
+    --color-foreground: 232 237 255;
+    /* Alias for text-primary */
+    --color-muted-foreground: 158 174 210;
+    /* Alias for text-secondary */
+    --color-border: 45 61 99;
+    /* Navy border */
+
+    /* Form Tokens */
+    --form-input-border: 45 61 99;
+    --form-select-border: 45 61 99;
+
+    /* Modal Tokens */
+    --modal-overlay-dark: 9 12 24;
+    --modal-surface-dark: 20 28 54;
+    --modal-title-dark: 232 237 255;
+    --modal-text-dark: 158 174 210;
+
+    /* Sidebar Tokens */
+    --sidebar-link: 170 186 225;
+    --sidebar-link-hover: 234 240 255;
+    --sidebar-link-active: 255 255 255;
+    --sidebar-submenu-link: 145 163 203;
+    --sidebar-submenu-link-hover: 200 214 255;
+    --sidebar-divider: 96 118 176;
+    --sidebar-border: 45 61 99;
+    --sidebar-header-bg: 38 52 96;
+    --sidebar-footer-bg: 12 16 32;
+    --sidebar-overlay: 5 8 18;
+    --sidebar-scrollbar: 92 115 234;
+    --sidebar-badge-start: 92 115 234;
+    --sidebar-badge-end: 72 90 210;
+    --sidebar-active-shadow: 92 115 234;
+    --sidebar-active-gradient-start: 92 115 234;
+    --sidebar-active-gradient-end: 120 140 255;
+
+    /* Gradient Tokens */
+    --gradient-dark-gold-start: 22 30 58;
+    --gradient-dark-gold-end: 12 16 32;
+    --gradient-midnight-start: 12 16 32;
+    --gradient-midnight-end: 24 34 68;
+}
+
+@layer base {
+    body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'Poppins', 'Inter', sans-serif;
+        font-weight: 600;
+    }
+}
+
+@layer components {
+
+    /* Glassmorphism Card */
+    .glass-card {
+        background: rgb(var(--color-white) / 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgb(var(--color-white) / 0.18);
+    }
+
+    /* Gradient Backgrounds */
+    .gradient-purple-blue {
+        background: linear-gradient(135deg, rgb(var(--gradient-purple-blue-start)) 0%, rgb(var(--gradient-purple-blue-end)) 100%);
+    }
+
+    .gradient-green-teal {
+        background: linear-gradient(135deg, rgb(var(--gradient-green-teal-start)) 0%, rgb(var(--gradient-green-teal-end)) 100%);
+    }
+
+    .gradient-orange-pink {
+        background: linear-gradient(135deg, rgb(var(--gradient-orange-pink-start)) 0%, rgb(var(--gradient-orange-pink-end)) 100%);
+    }
+
+    .gradient-red-purple {
+        background: linear-gradient(135deg, rgb(var(--gradient-red-purple-start)) 0%, rgb(var(--gradient-red-purple-end)) 100%);
+    }
+
+    /* Modern Card with Shadow */
+    .modern-card {
+        @apply bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300;
+    }
+
+    .modern-card-elevated {
+        @apply bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1;
+    }
+
+    .dark .modern-card,
+    .dark .modern-card-elevated {
+        background: rgb(var(--color-surface));
+        border: 1px solid rgb(var(--color-border));
+        box-shadow: 0 14px 34px rgb(6 10 22 / 0.45);
+    }
+
+    /* Animated Stat Card */
+    .stat-card {
+        @apply relative overflow-hidden rounded-2xl p-6 transition-all duration-300;
+        @apply hover:scale-105 hover:shadow-2xl;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgb(var(--color-white) / 0.1) 0%, rgb(var(--color-white) / 0) 100%);
+        pointer-events: none;
+    }
+
+    /* Smooth Animations */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    .slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+
+    .scale-in {
+        animation: scaleIn 0.3s ease-out;
+    }
+
+    /* Hover Glow Effect */
+    .hover-glow {
+        @apply transition-all duration-300;
+    }
+
+    .hover-glow:hover {
+        box-shadow: 0 0 20px rgb(var(--color-primary) / 0.4);
+    }
+
+    /* Icon Container with Gradient */
+    .icon-gradient {
+        @apply rounded-xl p-3 flex items-center justify-center;
+    }
+
+    /* Modern Button */
+    .btn-modern {
+        @apply px-6 py-3 rounded-xl font-medium transition-all duration-300;
+        @apply hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0;
+    }
+
+    .btn-gradient {
+        @apply btn-modern text-white;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        @apply relative w-full;
+    }
+
+    .chart-container canvas {
+        @apply w-full h-full;
+    }
+
+    /* Enhanced Shadow for Charts */
+    .shadow-glow {
+        box-shadow: 0 10px 40px rgb(var(--color-primary) / 0.15);
+    }
+
+    .shadow-glow:hover {
+        box-shadow: 0 15px 50px rgb(var(--color-primary) / 0.25);
+    }
+}
+
+@layer utilities {
+
+    /* Text Gradients */
+    .text-gradient {
+        @apply bg-clip-text text-transparent;
+    }
+
+    .text-gradient-purple-blue {
+        background: linear-gradient(135deg, rgb(var(--gradient-purple-blue-start)) 0%, rgb(var(--gradient-purple-blue-end)) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Backdrop Blur Utilities */
+    .backdrop-blur-sm {
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    .backdrop-blur-md {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .backdrop-blur-lg {
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* Animation Utilities */
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+
+    .animation-delay-4000 {
+        animation-delay: 4s;
+    }
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgb(var(--scrollbar-track) / 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-primary) / 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-primary) / 0.7);
+}
+
+html.theme-preload *,
+html.theme-preload *::before,
+html.theme-preload *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
+html.theme-preload body {
+    visibility: hidden;
+}
+
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+    transition: none !important;
+}
+
+@layer base {
+    .dark body {
+        background-color: rgb(var(--color-background));
+        color: rgb(var(--color-text-primary));
+    }
+
+    .dark :is(input, select, textarea) {
+        background-color: rgb(var(--color-surface));
+        border-color: rgb(var(--color-border));
+        color: rgb(var(--color-text-primary));
+    }
+
+    .dark select option {
+        background-color: rgb(var(--color-surface));
+        color: rgb(var(--color-text-primary));
+    }
+
+    .dark ::placeholder {
+        color: rgb(var(--color-text-secondary));
+    }
+
+    .dark .bg-gray-900,
+    .dark .dark\:bg-gray-900 {
+        background-color: rgb(var(--color-background));
+    }
+
+    .dark .bg-gray-800,
+    .dark .dark\:bg-gray-800 {
+        background-color: rgb(var(--color-surface));
+    }
+
+    .dark .bg-gray-700,
+    .dark .dark\:bg-gray-700 {
+        background-color: rgb(var(--color-surface));
+    }
+
+    .dark .bg-gray-700\/50,
+    .dark .dark\:bg-gray-700\/50 {
+        background-color: rgb(var(--color-surface) / 0.6);
+    }
+
+    .dark .bg-gray-800\/50,
+    .dark .dark\:bg-gray-800\/50 {
+        background-color: rgb(var(--color-surface) / 0.55);
+    }
+
+    .dark .bg-gray-900\/20,
+    .dark .dark\:bg-gray-900\/20 {
+        background-color: rgb(var(--color-background) / 0.2);
+    }
+
+    .dark .dark\:border-gray-700,
+    .dark .border-gray-700,
+    .dark .dark\:border-gray-600,
+    .dark .border-gray-600 {
+        border-color: rgb(var(--color-border));
+    }
+
+    .dark .dark\:text-gray-300,
+    .dark .text-gray-300,
+    .dark .dark\:text-gray-400,
+    .dark .text-gray-400 {
+        color: rgb(var(--color-text-secondary));
+    }
+
+    .dark .dark\:text-white {
+        color: rgb(var(--color-text-primary));
+    }
+}

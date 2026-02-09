@@ -1,0 +1,90 @@
+<?php
+
+return [
+    'permission_labels' => [
+        'close.year' => 'إغلاق السنة الدراسية',
+
+        'students.view' => 'عرض الطلاب',
+        'students.create' => 'إضافة طالب',
+        'students.edit' => 'تعديل بيانات طالب',
+        'students.delete' => 'حذف طالب',
+        'students.promote' => 'ترحيل الطلاب',
+
+        'curriculum.manage' => 'إدارة المناهج',
+        'classes.manage' => 'إدارة الفصول',
+        'timetable.manage' => 'إدارة الجداول',
+
+        'marks.view' => 'عرض الدرجات',
+        'marks.edit' => 'رصد الدرجات',
+        'marks.override' => 'تعديل الدرجات (إداري)',
+
+        'staff.view' => 'عرض الموظفين',
+        'staff.create' => 'إضافة موظف',
+        'staff.edit' => 'تعديل موظف',
+        'staff.delete' => 'حذف موظف',
+
+        'attendance.manage' => 'إدارة الحضور',
+        'attendance.view' => 'عرض الحضور',
+
+        'leaves.approve' => 'الموافقة على الإجازات',
+        'leave.request' => 'طلب إجازة',
+
+        'payroll.manage' => 'إدارة الرواتب',
+
+        'finance.apply_discount' => 'تطبيق الخصومات',
+        'finance.record_payment' => 'تسجيل دفعة',
+        'finance.cancel_payment' => 'إلغاء دفعة',
+
+        'roles.manage' => 'إدارة الصلاحيات',
+        'settings.edit' => 'إعدادات النظام',
+        'logs.view' => 'سجلات النظام',
+    ],
+    'permission_group_labels' => [
+        'close' => 'السنة الدراسية',
+        'students' => 'الطلاب',
+        'curriculum' => 'المناهج',
+        'classes' => 'الفصول',
+        'timetable' => 'الجداول',
+        'marks' => 'الدرجات',
+        'staff' => 'الموظفون',
+        'attendance' => 'الحضور',
+        'leaves' => 'الإجازات',
+        'leave' => 'الإجازات',
+        'payroll' => 'الرواتب',
+        'finance' => 'المالية',
+        'roles' => 'الأدوار والصلاحيات',
+        'settings' => 'الإعدادات',
+        'logs' => 'السجلات',
+        'other' => 'أخرى',
+    ],
+    'role_labels' => [
+        'Super Admin' => 'المدير العام',
+        'super_admin' => 'المدير العام',
+        'Admin' => 'مدير النظام',
+        'admin' => 'مدير النظام',
+        'Teacher' => 'معلم',
+        'teacher' => 'معلم',
+        'Student' => 'طالب',
+        'student' => 'طالب',
+        'Parent' => 'ولي أمر',
+        'parent' => 'ولي أمر',
+        'Accountant' => 'محاسب',
+        'accountant' => 'محاسب',
+        'Academic Coordinator' => 'منسق أكاديمي',
+        'academic_coordinator' => 'منسق أكاديمي',
+        'Academic Manager' => 'مدير أكاديمي',
+        'academic_manager' => 'مدير أكاديمي',
+        'HR Manager' => 'مدير الموارد البشرية',
+        'hr_manager' => 'مدير الموارد البشرية',
+    ],
+    'static_roles' => [
+        'Super Admin',
+        'super_admin',
+        'Teacher',
+        'teacher',
+        'Student',
+        'student',
+        'Parent',
+        'parent',
+    ],
+];
