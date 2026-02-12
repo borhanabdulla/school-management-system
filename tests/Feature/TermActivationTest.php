@@ -13,6 +13,7 @@ use App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus;
 use App\Domains\Academic\Term\Exceptions\TermYearNotActiveException;
 use App\Infrastructure\Exceptions\BusinessRuleException;
 use App\Infrastructure\Context\AcademicContextService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
@@ -131,5 +132,27 @@ class TermActivationTest extends TestCase
             $this->assertEquals(TermStatus::Pending, $termA->fresh()->status);
             $this->assertEquals(AcademicYearStatus::Active, $yearB->fresh()->status);
         }
+    }
+
+    /** @test */
+    public function it_enforces_single_active_term_per_year()
+    {
+        $year = AcademicYear::factory()->create();
+
+        Term::create([
+            'academic_year_id' => $year->id,
+            'name' => 'T1',
+            'status' => TermStatus::Active,
+            'order_index' => 1,
+        ]);
+
+        $this->expectException(QueryException::class);
+
+        Term::create([
+            'academic_year_id' => $year->id,
+            'name' => 'T2',
+            'status' => TermStatus::Active,
+            'order_index' => 2,
+        ]);
     }
 }

@@ -13,6 +13,7 @@ use App\Domains\Academic\Grading\Models\SystemSetting;
 use App\Domains\Academic\Results\Models\TermResult;
 use App\Domains\Academic\Results\Models\TermResultFailure;
 use App\Domains\Academic\Student\Models\Student;
+use App\Domains\Academic\Student\Models\StudentEnrollment;
 use App\Domains\Academic\Student\Models\StudentMark;
 use App\Domains\Academic\Subject\Models\Subject;
 use App\Domains\Academic\Term\Models\Term;
@@ -50,6 +51,12 @@ class CalculateTermGradesScaleTest extends TestCase
 
         $student = Student::factory()->create([
             'current_class_section_id' => $classSection->id,
+        ]);
+        StudentEnrollment::factory()->create([
+            'student_id' => $student->id,
+            'academic_year_id' => $year->id,
+            'grade_id' => $classSection->grade_id,
+            'class_section_id' => $classSection->id,
         ]);
 
         $config = SubjectGradingConfig::where('subject_id', $subject->id)
@@ -210,6 +217,12 @@ class CalculateTermGradesScaleTest extends TestCase
 
         $student = Student::factory()->create([
             'current_class_section_id' => $classSection->id,
+        ]);
+        StudentEnrollment::factory()->create([
+            'student_id' => $student->id,
+            'academic_year_id' => $year->id,
+            'grade_id' => $classSection->grade_id,
+            'class_section_id' => $classSection->id,
         ]);
 
         StudentMark::create([

@@ -7,6 +7,7 @@ use App\Domains\Academic\ClassSection\Models\ClassSection;
 use App\Domains\Academic\Grade\Models\Grade;
 use App\Domains\Academic\Student\Data\StudentDirectoryFilterData;
 use App\Domains\Academic\Student\Models\Student;
+use App\Domains\Academic\Student\Models\StudentEnrollment;
 use App\Domains\Academic\Student\Services\StudentLookupService;
 use App\Domains\Finance\Enums\InvoiceStatus;
 use App\Domains\Finance\Models\Invoice;
@@ -26,10 +27,16 @@ class StudentLookupServiceTest extends TestCase
             'academic_year_id' => $year->id,
         ]);
 
-        Student::factory()->create([
+        $student = Student::factory()->create([
             'current_grade_id' => $grade->id,
             'current_class_section_id' => $section->id,
             'status' => 'active',
+        ]);
+        StudentEnrollment::factory()->create([
+            'student_id' => $student->id,
+            'academic_year_id' => $year->id,
+            'grade_id' => $grade->id,
+            'class_section_id' => $section->id,
         ]);
 
         $service = app(StudentLookupService::class);
@@ -43,10 +50,16 @@ class StudentLookupServiceTest extends TestCase
         $stats = $service->getDirectoryStats($filter);
         $this->assertSame(1, $stats['total_students']);
 
-        Student::factory()->create([
+        $secondStudent = Student::factory()->create([
             'current_grade_id' => $grade->id,
             'current_class_section_id' => $section->id,
             'status' => 'active',
+        ]);
+        StudentEnrollment::factory()->create([
+            'student_id' => $secondStudent->id,
+            'academic_year_id' => $year->id,
+            'grade_id' => $grade->id,
+            'class_section_id' => $section->id,
         ]);
 
         $statsCached = $service->getDirectoryStats($filter);

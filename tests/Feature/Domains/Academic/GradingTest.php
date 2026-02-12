@@ -306,7 +306,10 @@ class GradingTest extends TestCase
             ->forStudent($student)
             ->forCourseOffering($courseOffering)
             ->forMonth($month)
-            ->create(['category' => 'شفهي']);
+            ->create([
+                'category' => 'شفهي',
+                'category_key' => \App\Domains\Academic\Grading\Models\GradebookSettings::generateCategoryKey('شفهي'),
+            ]);
 
         $this->assertDatabaseCount('monthly_grades', 2);
     }

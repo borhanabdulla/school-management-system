@@ -13,7 +13,7 @@ class GradingCalculatorServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->calculator = new GradingCalculatorService();
+        $this->calculator = app(GradingCalculatorService::class);
     }
 
     public function test_normalize_calculates_correctly()

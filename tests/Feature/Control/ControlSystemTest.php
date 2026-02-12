@@ -17,6 +17,7 @@ use App\Domains\Academic\Grading\Models\GradebookSettings;
 use App\Domains\Academic\Grading\Models\MonthlyCategoryMapping;
 use App\Domains\Academic\Grading\Models\SubjectGradingConfig;
 use App\Domains\Academic\Grading\Models\SystemSetting;
+use App\Domains\Academic\Grading\Services\GradingConfigHealthChecker;
 use App\Domains\Shared\Models\User;
 use App\Domains\Academic\Control\Services\SecrecyService;
 use App\Domains\Academic\Control\Services\BlindEntryService;
@@ -189,6 +190,9 @@ class ControlSystemTest extends TestCase
         ]);
         $this->configureGradingForOffering($courseOffering);
 
+        $report = app(GradingConfigHealthChecker::class)->checkTerm($this->term)->toArray();
+        $this->assertEmpty($report['invalid'], json_encode($report['invalid'], JSON_UNESCAPED_UNICODE));
+
         $blindService = new BlindEntryService();
         $blindService->submitGrade(
             $this->session,
@@ -300,8 +304,14 @@ class ControlSystemTest extends TestCase
         $this->session->update(['status' => 'active', 'is_active' => true]);
 
         $courseOffering = CourseOffering::factory()->create([
+            'academic_year_id' => $this->academicYear->id,
             'term_id' => $this->term->id,
+            'class_section_id' => $this->classSection->id,
         ]);
+        $this->configureGradingForOffering($courseOffering);
+
+        $report = app(GradingConfigHealthChecker::class)->checkTerm($this->term)->toArray();
+        $this->assertEmpty($report['invalid'], json_encode($report['invalid'], JSON_UNESCAPED_UNICODE));
 
         $blindService = new BlindEntryService();
         $blindService->submitGrade(
@@ -327,8 +337,14 @@ class ControlSystemTest extends TestCase
         ]);
 
         $courseOffering = CourseOffering::factory()->create([
+            'academic_year_id' => $this->academicYear->id,
             'term_id' => $this->term->id,
+            'class_section_id' => $this->classSection->id,
         ]);
+        $this->configureGradingForOffering($courseOffering);
+
+        $report = app(GradingConfigHealthChecker::class)->checkTerm($this->term)->toArray();
+        $this->assertEmpty($report['invalid'], json_encode($report['invalid'], JSON_UNESCAPED_UNICODE));
 
         // Create control mark
         ControlMark::create([
@@ -366,6 +382,7 @@ class ControlSystemTest extends TestCase
             'class_section_id' => $this->classSection->id,
         ]);
         $this->configureGradingForOffering($courseOffering);
+
 
         FinalResult::create([
             'exam_session_id' => $this->session->id,

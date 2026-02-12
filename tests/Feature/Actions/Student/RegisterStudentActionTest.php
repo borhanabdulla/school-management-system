@@ -58,6 +58,7 @@ class RegisterStudentActionTest extends TestCase
             health_data: [],
             address: [],
             documents: [],
+            photo: null,
             is_transfer: false,
             previous_history: null,
             create_invoice: false
@@ -117,6 +118,7 @@ class RegisterStudentActionTest extends TestCase
             health_data: [],
             address: [],
             documents: [],
+            photo: null,
             is_transfer: false,
             previous_history: null,
             create_invoice: false
@@ -166,6 +168,7 @@ class RegisterStudentActionTest extends TestCase
             health_data: [],
             address: [],
             documents: [],
+            photo: null,
             is_transfer: false,
             previous_history: null,
             create_invoice: false

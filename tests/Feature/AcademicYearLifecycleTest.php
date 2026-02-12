@@ -155,6 +155,7 @@ class AcademicYearLifecycleTest extends TestCase
         }
 
         // الخطوة 10: تعديل الاسم فقط (يجب أن ينجح)
+        $originalName = $newYear->name;
         app(UpdateAcademicYearAction::class)->execute($newYear, new AcademicYearData(
             name: '2031-2032',
             start_date: $newYear->start_date, // Same date
@@ -162,7 +163,7 @@ class AcademicYearLifecycleTest extends TestCase
             status: AcademicYearStatus::Closed,
             terms: []
         ));
-        $this->assertEquals('Final Name', $newYear->fresh()->name, 'Step 10: Name update allowed for closed year');
+        $this->assertEquals('2031-2032', $newYear->fresh()->name, 'Step 10: Name update allowed for closed year');
 
         // الخطوة 11: الأرشفة
         app(ArchiveAcademicYearAction::class)->execute($newYear);

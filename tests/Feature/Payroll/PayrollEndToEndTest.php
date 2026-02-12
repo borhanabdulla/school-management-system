@@ -5,13 +5,16 @@ namespace Tests\Feature\Payroll;
 use App\Domains\HR\Payroll\Actions\GeneratePayrollAction;
 use App\Domains\HR\Payroll\Data\PayrollGenerationData;
 use App\Domains\HR\Payroll\Enums\PayrollBatchStatus;
+use App\Domains\HR\Payroll\Enums\LoanStatus;
+use App\Domains\HR\Payroll\Models\Loan;
+use App\Domains\HR\Payroll\Models\LoanInstallment;
 use App\Domains\HR\Payroll\Models\Contract;
 use App\Domains\HR\Payroll\Models\PayrollBatch;
-use App\Domains\HR\Payroll\Models\PayrollRecord;
 use App\Domains\HR\Staff\Models\Staff;
 use App\Domains\Shared\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PayrollEndToEndTest extends TestCase
@@ -61,7 +64,7 @@ class PayrollEndToEndTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_payroll_batch_successfully()
     {
         // Arrange
@@ -90,20 +93,44 @@ class PayrollEndToEndTest extends TestCase
         $this->assertEquals(6500, $record->gross_earnings);
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_deductions_correctly()
     {
-        // Arrange: Add logic for deductions (e.g. absent days) if implemented in calculation service
-        // For now, testing that manual deductions or contract deductions work
+        $loan = Loan::create([
+            'staff_id' => $this->staff->id,
+            'amount' => 1000,
+            'paid_amount' => 0,
+            'installments_count' => 1,
+            'monthly_installment' => 200,
+            'reason' => 'Test loan',
+            'status' => LoanStatus::Approved,
+            'start_date' => now()->startOfMonth(),
+            'approved_by' => $this->admin->id,
+            'approved_at' => now(),
+        ]);
 
-        // Let's add a deduction item manually to contract? Or rely on what's available.
-        // Assuming Logic handles deduction items.
+        LoanInstallment::create([
+            'loan_id' => $loan->id,
+            'amount' => 200,
+            'due_date' => now()->startOfMonth(),
+            'status' => 'pending',
+        ]);
 
-        // Act
-        // ... (Simulate generation)
+        $action = app(GeneratePayrollAction::class);
+        $data = PayrollGenerationData::fromYearMonth(now()->year, now()->month);
+
+        $batch = $action->execute($data, $this->admin->id);
+
+        $this->assertEquals(200, $batch->total_deductions);
+
+        $record = $batch->records()->first();
+        $this->assertNotNull($record);
+        $this->assertEquals(200, $record->total_deductions);
+        $this->assertCount(1, $record->deductions);
+        $this->assertEquals(200, $record->deductions->first()->amount);
     }
 
-    /** @test */
+    #[Test]
     public function it_cannot_regenerate_batch_for_same_period()
     {
         // Arrange

@@ -10,6 +10,7 @@ use App\Domains\Academic\AcademicYear\Models\AcademicYear;
 use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\Term\Enums\TermStatus;
 use App\Domains\Academic\Results\Models\AnnualResult;
+use App\Domains\Academic\Results\Enums\ResultDecision;
 use App\Domains\Academic\Promotion\Models\Promotion;
 use App\Domains\Academic\Student\Services\StudentEnrollmentQueryService;
 
@@ -43,10 +44,11 @@ class ReadinessServiceTest extends TestCase
             'status' => TermStatus::Active->value, // Not completed
         ]);
 
-        Term::factory()->create([
+        $completedTerm = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed->value,
+            'status' => TermStatus::Pending->value,
         ]);
+        $completedTerm->update(['status' => TermStatus::Completed->value]);
 
         // Act
         $items = $this->service->getReadinessItems($year);
@@ -66,15 +68,17 @@ class ReadinessServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        Term::factory()->create([
+        $completedTerm1 = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed->value,
+            'status' => TermStatus::Pending->value,
         ]);
+        $completedTerm1->update(['status' => TermStatus::Completed->value]);
 
-        Term::factory()->create([
+        $completedTerm2 = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed->value,
+            'status' => TermStatus::Pending->value,
         ]);
+        $completedTerm2->update(['status' => TermStatus::Completed->value]);
 
         // Act
         $items = $this->service->getReadinessItems($year);
@@ -101,7 +105,7 @@ class ReadinessServiceTest extends TestCase
 
         AnnualResult::factory()->create([
             'academic_year_id' => $year->id,
-            'decision' => 'passed',
+            'decision' => ResultDecision::Pass->value,
         ]);
 
         // Act
@@ -164,10 +168,11 @@ class ReadinessServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        Term::factory()->create([
+        $completedTerm = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed->value,
+            'status' => TermStatus::Pending->value,
         ]);
+        $completedTerm->update(['status' => TermStatus::Completed->value]);
 
         // Act
         $items = $this->service->getReadinessItems($year);
@@ -187,15 +192,16 @@ class ReadinessServiceTest extends TestCase
         ]);
 
         // Complete all terms
-        Term::factory()->create([
+        $completedTerm = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed->value,
+            'status' => TermStatus::Pending->value,
         ]);
+        $completedTerm->update(['status' => TermStatus::Completed->value]);
 
         // Complete all annual results
         AnnualResult::factory()->create([
             'academic_year_id' => $year->id,
-            'decision' => 'passed',
+            'decision' => ResultDecision::Pass->value,
         ]);
 
         // Act
@@ -264,7 +270,7 @@ class ReadinessServiceTest extends TestCase
         // Assert
         $termsItem = $items->firstWhere('key', ReadinessService::KEY_TERMS_NOT_COMPLETED);
         $this->assertNotNull($termsItem);
-        $this->assertEquals(['academic_year' => 42], $termsItem->routeParams);
+        $this->assertEquals(['year_id' => 42], $termsItem->routeParams);
     }
 
     /** @test */

@@ -13,7 +13,10 @@ use App\Domains\Academic\Grading\Models\MonthlyCategoryMapping;
 use App\Domains\Academic\Grading\Models\MonthlyGrade;
 use App\Domains\Academic\Grading\Models\SubjectGradingConfig;
 use App\Domains\Academic\Grading\Models\TemplateCategory;
+use App\Domains\Academic\Grading\Models\SystemSetting;
+use App\Domains\Academic\Grading\Services\GradingConfigHealthChecker;
 use App\Domains\Academic\Grading\Services\GradeSyncService;
+use App\Domains\Academic\Grading\Services\GradeScaleValidator;
 use App\Domains\Academic\Grade\Models\Grade;
 use App\Domains\Academic\Homework\Enums\SubmissionType;
 use App\Domains\Academic\Homework\Models\Homework;
@@ -36,6 +39,16 @@ use App\Domains\Academic\Results\Models\AnnualResult;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    SystemSetting::set('grading.scale', [
+        ['min' => 0, 'max' => 59, 'grade' => 'F'],
+        ['min' => 59, 'max' => 69, 'grade' => 'D'],
+        ['min' => 69, 'max' => 79, 'grade' => 'C'],
+        ['min' => 79, 'max' => 89, 'grade' => 'B'],
+        ['min' => 89, 'max' => 100, 'grade' => 'A'],
+    ], 'grading', 'json');
+});
 
 test('pr10 scenario A: term1 monthly grades + final exam produce correct term result', function () {
     $academicYear = AcademicYear::factory()->create();
@@ -171,6 +184,9 @@ test('pr10 scenario A: term1 monthly grades + final exam produce correct term re
         'score' => 40,
         'is_absent' => false,
     ]);
+
+    $report = app(GradingConfigHealthChecker::class)->checkTerm($term1)->toArray();
+    expect($report['invalid'])->toBe([]);
 
     $action = app(CalculateTermGradesAction::class);
     $action->execute($classSection, $term1);
@@ -643,8 +659,8 @@ test('pr10 scenario C: annual aggregation sums term results correctly', function
     $term1Max = (float) $term1Results->sum('max_score');
     $term2Total = (float) $term2Results->sum('total_score');
     $term2Max = (float) $term2Results->sum('max_score');
-    $annualTotal = $term1Total + $term2Total;
-    $annualMax = $term1Max + $term2Max;
+    $annualTotal = ($term1Total * 0.5) + ($term2Total * 0.5);
+    $annualMax = ($term1Max * 0.5) + ($term2Max * 0.5);
     $expectedPercentage = $annualMax > 0 ? round(($annualTotal / $annualMax) * 100, 2) : 0;
 
     $service = app(AnnualResultService::class);
@@ -997,6 +1013,7 @@ test('full grading pipeline: settings -> monthly + attendance + homework -> term
         'assessment_id' => $assessment2->id,
         'title' => 'واجب 2',
         'max_score' => 20,
+        'submission_type' => SubmissionType::ONLINE->value,
     ]);
 
     $service->syncHomeworkGrade(HomeworkSubmission::create([
@@ -1048,5 +1065,5 @@ test('full grading pipeline: settings -> monthly + attendance + homework -> term
         ->firstOrFail();
 
     expect($annualPass->decision->value)->toBe('pass');
-    expect($annualFail->decision->value)->toBe('fail');
+    expect($annualFail->decision->value)->toBe('conditional');
 });

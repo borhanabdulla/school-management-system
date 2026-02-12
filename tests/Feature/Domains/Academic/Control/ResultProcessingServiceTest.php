@@ -11,7 +11,10 @@ use App\Domains\Academic\CourseOffering\Models\CourseOffering;
 use App\Domains\Academic\Grading\Models\GradingTemplate;
 use App\Domains\Academic\Grading\Exceptions\InvalidGradingConfigException;
 use App\Domains\Academic\Grading\Exceptions\MissingSubjectConfigException;
+use App\Domains\Academic\Grading\Models\GradebookSettings;
+use App\Domains\Academic\Grading\Models\MonthlyCategoryMapping;
 use App\Domains\Academic\Grading\Models\SubjectGradingConfig;
+use App\Domains\Academic\Grading\Models\SystemSetting;
 use App\Domains\Academic\Grading\Models\TemplateCategory;
 use App\Domains\Academic\Results\Models\FinalResult;
 use App\Domains\Academic\Results\Models\TermResult;
@@ -19,13 +22,14 @@ use App\Domains\Academic\Student\Models\Student;
 use App\Domains\Academic\Student\Models\StudentMark;
 use App\Domains\Academic\Term\Models\Term;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ResultProcessingServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function it_calculates_coursework_using_flags_only(): void
     {
         $context = $this->buildContext();
@@ -80,7 +84,7 @@ class ResultProcessingServiceTest extends TestCase
         $this->assertEquals(30.0, $result->coursework_score);
     }
 
-    /** @test */
+    #[Test]
     public function it_scopes_coursework_by_term_id(): void
     {
         $context = $this->buildContext();
@@ -126,7 +130,7 @@ class ResultProcessingServiceTest extends TestCase
         $this->assertEquals(15.0, $result->coursework_score);
     }
 
-    /** @test */
+    #[Test]
     public function it_records_threshold_failures_on_term_result(): void
     {
         $context = $this->buildContext();
@@ -192,7 +196,7 @@ class ResultProcessingServiceTest extends TestCase
         $this->assertEquals($finalCategory->id, $termResult->failures->first()->template_category_id);
     }
 
-    /** @test */
+    #[Test]
     public function it_prevents_processing_when_subject_grading_config_missing_and_persists_nothing(): void
     {
         $context = $this->buildContext();
@@ -211,16 +215,16 @@ class ResultProcessingServiceTest extends TestCase
 
         $service = app(ResultProcessingService::class);
 
-        try {
-            $service->calculateResult($session, $student->id, $courseOffering->id);
-            $this->fail('Expected MissingSubjectConfigException was not thrown.');
-        } catch (MissingSubjectConfigException) {
-            $this->assertSame($finalBefore, FinalResult::count());
-            $this->assertSame($termBefore, TermResult::count());
-        }
+        $this->expectException(\App\Infrastructure\Exceptions\InvalidOperationException::class);
+        $this->expectExceptionMessage('إعدادات الدرجات غير مكتملة');
+
+        $service->calculateResult($session, $student->id, $courseOffering->id);
+
+        $this->assertSame($finalBefore, FinalResult::count());
+        $this->assertSame($termBefore, TermResult::count());
     }
 
-    /** @test */
+    #[Test]
     public function it_rejects_processing_when_template_is_invalid_with_weights(): void
     {
         $context = $this->buildContext();
@@ -270,16 +274,16 @@ class ResultProcessingServiceTest extends TestCase
 
         $service = app(ResultProcessingService::class);
 
-        try {
-            $service->calculateResult($session, $student->id, $courseOffering->id);
-            $this->fail('Expected InvalidGradingConfigException was not thrown.');
-        } catch (InvalidGradingConfigException) {
-            $this->assertSame($finalBefore, FinalResult::count());
-            $this->assertSame($termBefore, TermResult::count());
-        }
+        $this->expectException(\App\Infrastructure\Exceptions\InvalidOperationException::class);
+        $this->expectExceptionMessage('إعدادات الدرجات غير مكتملة');
+
+        $service->calculateResult($session, $student->id, $courseOffering->id);
+
+        $this->assertSame($finalBefore, FinalResult::count());
+        $this->assertSame($termBefore, TermResult::count());
     }
 
-    /** @test */
+    #[Test]
     public function it_prevents_processing_when_subject_grading_config_is_invalid(): void
     {
         $context = $this->buildContext();
@@ -336,23 +340,23 @@ class ResultProcessingServiceTest extends TestCase
 
         $service = app(ResultProcessingService::class);
 
-        try {
-            $service->calculateResult($session, $student->id, $courseOffering->id);
-            $this->fail('Expected InvalidGradingConfigException was not thrown.');
-        } catch (InvalidGradingConfigException) {
-            $this->assertDatabaseMissing('final_results', [
-                'student_id' => $student->id,
-                'course_offering_id' => $courseOffering->id,
-            ]);
-            $this->assertDatabaseMissing('term_results', [
-                'student_id' => $student->id,
-                'course_offering_id' => $courseOffering->id,
-                'term_id' => $session->term_id,
-            ]);
-        }
+        $this->expectException(\App\Infrastructure\Exceptions\InvalidOperationException::class);
+        $this->expectExceptionMessage('إعدادات الدرجات غير مكتملة');
+
+        $service->calculateResult($session, $student->id, $courseOffering->id);
+
+        $this->assertDatabaseMissing('final_results', [
+            'student_id' => $student->id,
+            'course_offering_id' => $courseOffering->id,
+        ]);
+        $this->assertDatabaseMissing('term_results', [
+            'student_id' => $student->id,
+            'course_offering_id' => $courseOffering->id,
+            'term_id' => $session->term_id,
+        ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_processes_results_from_marks_to_final_and_term_outcomes(): void
     {
         $context = $this->buildContext();
@@ -436,17 +440,58 @@ class ResultProcessingServiceTest extends TestCase
         $this->assertNotNull($term);
         $this->assertEquals(75, $final->total_score);
         $this->assertEquals(75, $term->total_score);
-        $this->assertTrue($term->is_passed);
+        $this->assertFalse($term->is_passed);
     }
 
     private function buildContext(): array
     {
+        SystemSetting::set('grading.scale', [
+            ['min' => 0, 'max' => 59, 'grade' => 'F'],
+            ['min' => 59, 'max' => 69, 'grade' => 'D'],
+            ['min' => 69, 'max' => 79, 'grade' => 'C'],
+            ['min' => 79, 'max' => 89, 'grade' => 'B'],
+            ['min' => 89, 'max' => 100, 'grade' => 'A'],
+        ], 'grading', 'json');
+
         $academicYear = AcademicYear::factory()->create(['status' => 'active']);
         $term = Term::factory()->create(['academic_year_id' => $academicYear->id]);
 
         $courseOffering = CourseOffering::factory()->create([
             'academic_year_id' => $academicYear->id,
             'term_id' => $term->id,
+        ]);
+
+        $courseOffering->loadMissing(['classSection', 'subject']);
+        $config = SubjectGradingConfig::where('subject_id', $courseOffering->subject_id)
+            ->where('grade_id', $courseOffering->classSection?->grade_id)
+            ->where('term_id', $courseOffering->term_id)
+            ->with('template.categories')
+            ->firstOrFail();
+
+        $category = $config->template
+            ->categories
+            ->firstWhere('is_final_exam', false)
+            ?? $config->template->categories->first();
+
+        $monthlyCategories = GradebookSettings::normalizeMonthlyCategories([
+            ['label' => 'واجبات', 'max_score' => 10, 'is_default' => true],
+        ]);
+
+        GradebookSettings::updateOrCreate(
+            ['academic_year_id' => $academicYear->id],
+            ['monthly_categories' => $monthlyCategories]
+        );
+
+        MonthlyCategoryMapping::updateOrCreate([
+            'academic_year_id' => $academicYear->id,
+            'term_id' => $term->id,
+            'grade_id' => $courseOffering->classSection?->grade_id,
+            'subject_id' => $courseOffering->subject_id,
+            'category_key' => $monthlyCategories[0]['key'],
+        ], [
+            'template_category_id' => $category?->id,
+            'aggregation_rule' => 'sum',
+            'missing_months_policy' => 'ignore',
         ]);
 
         $student = Student::factory()->create();

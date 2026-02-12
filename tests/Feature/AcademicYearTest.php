@@ -19,6 +19,10 @@ use App\Domains\Academic\AcademicYear\Actions\ActivateAcademicYearAction;
 use App\Domains\Academic\AcademicYear\Actions\DeleteAcademicYearAction;
 use App\Domains\Academic\AcademicYear\Actions\CloseAcademicYearAction;
 use App\Domains\Academic\Term\Enums\TermStatus;
+use App\Domains\Academic\ClassSection\Models\ClassSection;
+use App\Domains\Academic\Grade\Models\Grade;
+use App\Domains\Academic\Student\Models\Student;
+use App\Domains\Academic\Student\Models\StudentEnrollment;
 use App\Infrastructure\Context\AcademicContextService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -209,6 +213,76 @@ class AcademicYearTest extends TestCase
     }
 
     /** @test */
+    public function it_blocks_deleting_pending_year_with_enrollments()
+    {
+        $year = AcademicYear::factory()->create(['status' => AcademicYearStatus::Pending]);
+        $grade = Grade::factory()->create();
+        $section = ClassSection::factory()->create([
+            'academic_year_id' => $year->id,
+            'grade_id' => $grade->id,
+        ]);
+        $student = Student::factory()->create([
+            'current_class_section_id' => $section->id,
+            'current_grade_id' => $grade->id,
+        ]);
+
+        StudentEnrollment::factory()->create([
+            'student_id' => $student->id,
+            'academic_year_id' => $year->id,
+            'grade_id' => $grade->id,
+            'class_section_id' => $section->id,
+        ]);
+
+        $this->expectException(YearNotDeletableException::class);
+
+        app(DeleteAcademicYearAction::class)->execute($year->id);
+    }
+
+    /** @test */
+    public function it_keeps_enrollments_count_after_student_moves_years()
+    {
+        $year1 = AcademicYear::factory()->create(['status' => AcademicYearStatus::Active]);
+        $year2 = AcademicYear::factory()->create(['status' => AcademicYearStatus::Pending]);
+
+        $grade1 = Grade::factory()->create();
+        $grade2 = Grade::factory()->create();
+
+        $section1 = ClassSection::factory()->create([
+            'academic_year_id' => $year1->id,
+            'grade_id' => $grade1->id,
+        ]);
+        $section2 = ClassSection::factory()->create([
+            'academic_year_id' => $year2->id,
+            'grade_id' => $grade2->id,
+        ]);
+
+        $student = Student::factory()->create([
+            'current_class_section_id' => $section1->id,
+            'current_grade_id' => $grade1->id,
+        ]);
+
+        StudentEnrollment::factory()->create([
+            'student_id' => $student->id,
+            'academic_year_id' => $year1->id,
+            'grade_id' => $grade1->id,
+            'class_section_id' => $section1->id,
+        ]);
+
+        $year1->loadCount(['students', 'enrollments']);
+        $this->assertSame(1, $year1->students_count);
+        $this->assertSame(1, $year1->enrollments_count);
+
+        $student->update([
+            'current_class_section_id' => $section2->id,
+            'current_grade_id' => $grade2->id,
+        ]);
+
+        $year1->refresh()->loadCount(['students', 'enrollments']);
+        $this->assertSame(0, $year1->students_count);
+        $this->assertSame(1, $year1->enrollments_count);
+    }
+
+    /** @test */
     public function it_can_activate_pending_year_when_no_active_year_exists()
     {
         // Ensure no active years exist
@@ -250,22 +324,25 @@ class AcademicYearTest extends TestCase
             'status' => AcademicYearStatus::Active,
         ]);
 
-        Term::create([
+        $termB1 = Term::create([
             'academic_year_id' => $yearB->id,
             'name' => 'B-T1',
             'start_date' => '2023-09-01',
             'end_date' => '2024-01-01',
             'order_index' => 1,
-            'status' => TermStatus::Completed,
+            'status' => TermStatus::Pending,
         ]);
-        Term::create([
+        $termB1->update(['status' => TermStatus::Completed]);
+
+        $termB2 = Term::create([
             'academic_year_id' => $yearB->id,
             'name' => 'B-T2',
             'start_date' => '2024-01-15',
             'end_date' => '2024-06-30',
             'order_index' => 2,
-            'status' => TermStatus::Completed,
+            'status' => TermStatus::Pending,
         ]);
+        $termB2->update(['status' => TermStatus::Completed]);
 
         $yearC = AcademicYear::create([
             'name' => '2024-2025',

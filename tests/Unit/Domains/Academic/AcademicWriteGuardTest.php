@@ -53,7 +53,7 @@ class AcademicWriteGuardTest extends TestCase
         $this->assertFalse($this->guard->isWritable($year->id));
 
         $this->expectException(InvalidOperationException::class);
-        $this->expectExceptionMessage('مغلقة ولا يمكن التعديل');
+        $this->expectExceptionMessage('مغلقة أو مؤرشفة ولا يمكن التعديل');
 
         $this->guard->assertYearNotClosed($year->id);
     }
@@ -105,8 +105,9 @@ class AcademicWriteGuardTest extends TestCase
 
         $term = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed
+            'status' => TermStatus::Pending
         ]);
+        $term->update(['status' => TermStatus::Completed]);
 
         $this->assertFalse($this->guard->isWritable($year->id, $term->id));
 
@@ -120,18 +121,19 @@ class AcademicWriteGuardTest extends TestCase
     public function it_blocks_writing_when_year_is_closed_even_if_term_is_active(): void
     {
         $year = AcademicYear::factory()->create([
-            'status' => AcademicYearStatus::Closed
+            'status' => AcademicYearStatus::Active
         ]);
 
         $term = Term::factory()->create([
             'academic_year_id' => $year->id,
             'status' => TermStatus::Active
         ]);
+        $year->update(['status' => AcademicYearStatus::Closed]);
 
         $this->assertFalse($this->guard->isWritable($year->id, $term->id));
 
         $this->expectException(InvalidOperationException::class);
-        $this->expectExceptionMessage('مغلقة ولا يمكن التعديل');
+        $this->expectExceptionMessage('مغلقة أو مؤرشفة ولا يمكن التعديل');
 
         $this->guard->assertTermNotCompleted($term->id);
     }
@@ -168,9 +170,10 @@ class AcademicWriteGuardTest extends TestCase
 
         $term = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed,
+            'status' => TermStatus::Pending,
             'name' => 'الفصل الأول'
         ]);
+        $term->update(['status' => TermStatus::Completed]);
 
         $message = $this->guard->getBlockedMessage($year->id, $term->id);
 

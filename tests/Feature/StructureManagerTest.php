@@ -82,4 +82,18 @@ class StructureManagerTest extends TestCase
             ->call('saveGrade')
             ->assertHasErrors(['gradeForm.next_grade_id']);
     }
+
+    /** @test */
+    public function it_prevents_duplicate_grade_name_in_same_stage()
+    {
+        $stage = EducationalStage::create(['name' => 'Primary', 'rank' => 1]);
+        Grade::create(['educational_stage_id' => $stage->id, 'name' => 'Grade 1', 'level_order' => 1]);
+
+        Livewire::test(StructureManager::class)
+            ->set('gradeForm.educational_stage_id', $stage->id)
+            ->set('gradeForm.name', 'Grade 1')
+            ->set('gradeForm.level_order', 2)
+            ->call('saveGrade')
+            ->assertHasErrors(['gradeForm.name' => 'unique']);
+    }
 }

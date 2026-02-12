@@ -27,10 +27,11 @@ class AcademicYearClosureValidatorTest extends TestCase
     {
         $year = AcademicYear::factory()->create();
 
-        Term::factory()->create([
+        $completedTerm = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed,
+            'status' => TermStatus::Pending,
         ]);
+        $completedTerm->update(['status' => TermStatus::Completed]);
 
         $grade = Grade::factory()->create();
         $section = ClassSection::factory()->create([
@@ -87,10 +88,11 @@ class AcademicYearClosureValidatorTest extends TestCase
     {
         $year = AcademicYear::factory()->create();
 
-        Term::factory()->create([
+        $completedTerm = Term::factory()->create([
             'academic_year_id' => $year->id,
-            'status' => TermStatus::Completed,
+            'status' => TermStatus::Pending,
         ]);
+        $completedTerm->update(['status' => TermStatus::Completed]);
 
         $grade = Grade::factory()->create();
         $section = ClassSection::factory()->create([
@@ -128,4 +130,3 @@ class AcademicYearClosureValidatorTest extends TestCase
         $this->assertNotEmpty($result['issues']);
     }
 }
-

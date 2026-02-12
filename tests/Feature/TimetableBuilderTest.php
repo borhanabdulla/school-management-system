@@ -51,4 +51,18 @@ class TimetableBuilderTest extends TestCase
 
         $this->assertTrue($component->instance()->isReadOnly());
     }
+
+    /** @test */
+    public function it_blocks_saving_without_term_selection()
+    {
+        $year = AcademicYear::factory()->create([
+            'status' => AcademicYearStatus::Active,
+        ]);
+
+        Livewire::test(TimetableBuilder::class)
+            ->set('selectedYearId', $year->id)
+            ->set('selectedTermId', null)
+            ->call('saveSession')
+            ->assertDispatched('error');
+    }
 }
