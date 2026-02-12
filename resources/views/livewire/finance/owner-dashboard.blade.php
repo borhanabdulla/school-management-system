@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+<div class="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-indigo-950 p-6">
     <div class="max-w-7xl mx-auto">
         {{-- Header --}}
         <div class="mb-8">

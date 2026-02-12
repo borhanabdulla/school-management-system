@@ -14,11 +14,11 @@ trait HasDashboardQueries
         $query = StudentEnrollment::query();
 
         if (!empty($filters['academicYearId'])) {
-            $query->where('academic_year_id', $filters['academicYearId']);
+            $query->where('student_enrollments.academic_year_id', $filters['academicYearId']);
         }
 
         if (!empty($filters['gradeId'])) {
-            $query->where('grade_id', $filters['gradeId']);
+            $query->where('student_enrollments.grade_id', $filters['gradeId']);
         }
 
         return $query;
@@ -51,7 +51,7 @@ trait HasDashboardQueries
         $query = Invoice::query();
 
         if (!empty($filters['academicYearId'])) {
-            $query->where('academic_year_id', $filters['academicYearId']);
+            $query->where('invoices.academic_year_id', $filters['academicYearId']);
         }
 
         return $query;

@@ -70,7 +70,7 @@ trait HasAcademicScope
      */
     public function scopeCurrentYear(Builder $query): Builder
     {
-        return $query->where('academic_year_id', school()->activeYearId());
+        return $query->where($query->getModel()->getTable() . '.academic_year_id', school()->activeYearId());
     }
 
     /**

@@ -90,22 +90,22 @@ class Invoice extends Model
 
     public function scopePaid($query)
     {
-        return $query->where('status', \App\Domains\Finance\Enums\InvoiceStatus::Paid);
+        return $query->where('invoices.status', \App\Domains\Finance\Enums\InvoiceStatus::Paid);
     }
 
     public function scopeNotPaid($query)
     {
-        return $query->where('status', '!=', \App\Domains\Finance\Enums\InvoiceStatus::Paid);
+        return $query->where('invoices.status', '!=', \App\Domains\Finance\Enums\InvoiceStatus::Paid);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('status', \App\Domains\Finance\Enums\InvoiceStatus::Cancelled);
+        return $query->where('invoices.status', \App\Domains\Finance\Enums\InvoiceStatus::Cancelled);
     }
 
     public function scopeOutstanding($query)
     {
-        return $query->whereNotIn('status', [
+        return $query->whereNotIn('invoices.status', [
             \App\Domains\Finance\Enums\InvoiceStatus::Paid,
             \App\Domains\Finance\Enums\InvoiceStatus::Cancelled
         ]);

@@ -38,7 +38,7 @@ class ApplyDiscountAction
 
             // 0. التحقق من الإقفال المالي والسنة الدراسية
             if ($item->invoice->academicYear->status === \App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus::Closed) {
-                throw new \App\Domains\Finance\Exceptions\AcademicYearClosedException($item->invoice->academicYear->name);
+                throw new \App\Domains\Finance\Exceptions\AcademicYearClosedException();
             }
             // Financial Lock Check
             $this->lockService->ensureOpen($item->invoice->academic_year_id);

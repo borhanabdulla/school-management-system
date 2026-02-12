@@ -55,7 +55,8 @@ class CreateTeacherAction
             ]);
 
             // إسناد صلاحية "معلم"
-            // $user->assignRole('teacher');
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
+            $user->assignRole('teacher');
 
             // المستوى 2: إنشاء Staff
             $staffNumber = $this->generateStaffNumber();

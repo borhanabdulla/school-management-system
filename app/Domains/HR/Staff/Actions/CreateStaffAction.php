@@ -2,12 +2,12 @@
 
 namespace App\Domains\HR\Staff\Actions;
 
-use App\Data\Staff\StaffOnboardingData;
+use App\Domains\HR\Staff\Data\StaffOnboardingData;
 use App\Domains\HR\Enums\StaffRole;
 use App\Domains\HR\Staff\Models\Staff;
 use App\Domains\HR\Teacher\Models\Teacher;
 use App\Domains\Shared\Models\User;
-use App\Notifications\StaffWelcomeNotification;
+use App\Domains\HR\Staff\Notifications\StaffWelcomeNotification;
 use App\Domains\HR\Shared\Services\AuditLogService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -52,7 +52,9 @@ class CreateStaffAction
 
             // 4. تعيين الصلاحيات (إذا وُجد حساب)
             if ($user) {
-                $user->assignRole($data->role->value);
+                $roleName = $data->role->value;
+                \Spatie\Permission\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+                $user->assignRole($roleName);
             }
 
             // 5. تسجيل في سجل التدقيق
@@ -92,7 +94,6 @@ class CreateStaffAction
         $username = $this->generateUsername($data->email);
 
         return User::create([
-            'name' => "{$data->first_name} {$data->last_name}",
             'username' => $username,
             'email' => $data->email,
             'phone' => $data->phone,
