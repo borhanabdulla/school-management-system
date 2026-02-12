@@ -10,6 +10,7 @@ use App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus;
 use App\Domains\Academic\Services\ReadinessService;
 use App\Domains\Academic\AcademicYear\Actions\CloseAcademicYearAction;
 use App\Domains\Academic\AcademicYear\Validation\AcademicYearClosureValidator;
+use App\Infrastructure\Security\SensitiveAccess;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -52,11 +53,17 @@ class YearClosingWizard extends Component
     {
         $this->year = $year;
         $this->authorizeAccess();
+        $this->ensureSensitiveAccess();
 
         $this->readinessService = app(ReadinessService::class);
         $this->closureValidator = app(AcademicYearClosureValidator::class);
 
         $this->loadReadinessData();
+    }
+
+    public function hydrate(): void
+    {
+        $this->ensureSensitiveAccess();
     }
 
     /**
@@ -109,6 +116,10 @@ class YearClosingWizard extends Component
      */
     public function nextStep(): void
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         if ($this->currentStep < $this->totalSteps) {
             // التحقق من إمكانية الانتقال
             if ($this->currentStep === 1 && !$this->canProceedFromStep1()) {
@@ -159,6 +170,10 @@ class YearClosingWizard extends Component
      */
     public function closeYear(CloseAcademicYearAction $closeAction): void
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         $this->isClosing = true;
         $this->closingError = null;
         $this->closingSuccess = null;
@@ -172,7 +187,7 @@ class YearClosingWizard extends Component
             }
 
             // تنفيذ الإغلاق
-            $closeAction->execute($this->year, Auth::user());
+            $closeAction->execute($this->year);
 
             $this->closingSuccess = 'تم إغلاق السنة الدراسية بنجاح';
 
@@ -225,5 +240,24 @@ class YearClosingWizard extends Component
             'blockingItems' => $this->blockingItems,
             'warningItems' => $this->warningItems,
         ]);
+    }
+
+    protected function ensureSensitiveAccess(): bool
+    {
+        if (!auth()->check() || !auth()->user()->can('close.year')) {
+            abort(403, 'ليس لديك صلاحية إغلاق السنة الدراسية.');
+        }
+
+        if (SensitiveAccess::isVerified(request())) {
+            return true;
+        }
+
+        if (!session()->has('sensitive_access_intended')) {
+            $intended = request()->headers->get('referer') ?: url()->current();
+            session(['sensitive_access_intended' => $intended]);
+        }
+        $this->redirect(route('security.sensitive-verify'), navigate: true);
+
+        return false;
     }
 }

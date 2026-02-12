@@ -232,7 +232,7 @@ class StudentLookupService
     private function applyDirectoryFilters(Builder $query, StudentDirectoryFilterData $filter): Builder
     {
         if ($filter->academicYearId) {
-            $query->whereHas('currentClassSection', function ($q) use ($filter) {
+            $query->whereHas('enrollments', function ($q) use ($filter) {
                 $q->where('academic_year_id', $filter->academicYearId);
 
                 if ($filter->gradeId) {
@@ -240,7 +240,7 @@ class StudentLookupService
                 }
 
                 if ($filter->sectionId) {
-                    $q->where('id', $filter->sectionId);
+                    $q->where('class_section_id', $filter->sectionId);
                 }
             });
         } else {
@@ -265,8 +265,7 @@ class StudentLookupService
         if ($filter->search) {
             $search = $filter->search;
             $query->where(function ($q) use ($search) {
-                $q->where('student_code', 'like', "%{$search}%")
-                    ->orWhere('national_id', 'like', "%{$search}%")
+                $q->where('national_id', 'like', "%{$search}%")
                     ->orWhere('first_name_ar', 'like', "%{$search}%")
                     ->orWhere('family_name_ar', 'like', "%{$search}%")
                     ->orWhere('admission_number', 'like', "%{$search}%")

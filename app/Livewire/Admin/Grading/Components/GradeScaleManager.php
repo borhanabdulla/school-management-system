@@ -15,6 +15,7 @@ class GradeScaleManager extends Component
 {
     // Properties - نقل من GradingSettings.php
     public array $gradeScale = [];
+    public ?string $externalError = null;
 
     /**
      * Mount - تحميل السلم عند التهيئة

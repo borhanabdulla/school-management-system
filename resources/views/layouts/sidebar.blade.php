@@ -64,6 +64,7 @@
             <!-- ============================================================ -->
             <!-- بداية التعديل: الإدارة الأكاديمية (شاملة الروابط الجديدة) -->
             <!-- ============================================================ -->
+            @canany(['curriculum.manage', 'classes.manage', 'timetable.manage', 'close.year', 'grading.manage_settings'])
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('academic-years')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'academic-years' }">
@@ -180,12 +181,12 @@
                     </li>
                 </ul>
             </div>
-            <!-- ============================================================ -->
-            <!-- نهاية التعديل -->
-            <!-- ============================================================ -->
+            @endcanany
+            {{-- نهاية الإدارة الأكاديمية --}}
 
 
             <!-- Students with Submenu -->
+            @can('students.view')
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('students')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'students' }">
@@ -223,8 +224,10 @@
                     </li>
                 </ul>
             </div>
+            @endcan
 
             <!-- Teachers with Submenu -->
+            @canany(['staff.view', 'teacher.dashboard', 'grading.view_gradebook'])
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('teachers')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'teachers' }">
@@ -240,52 +243,68 @@
                     </svg>
                 </button>
                 <ul class="sidebar-submenu" :class="{ 'open': activeSubmenu === 'teachers' }" id="teachers-submenu">
+                    @can('teacher.dashboard')
                     <li>
                         <a href="{{ route('teacher.dashboard') }}" wire:navigate
                             class="sidebar-submenu-link {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}">
                             📊 لوحة المعلم
                         </a>
                     </li>
+                    @endcan
+                    @can('staff.view')
                     <li>
                         <a href="{{ route('teachers.index') }}" wire:navigate
                             class="sidebar-submenu-link {{ request()->routeIs('teachers.index') ? 'active' : '' }}">
                             قائمة المعلمين
                         </a>
                     </li>
+                    @endcan
+                    @can('staff.create')
                     <li>
                         <a href="{{ route('teachers.create') }}" wire:navigate
                             class="sidebar-submenu-link {{ request()->routeIs('teachers.create') ? 'active' : '' }}">
                             إضافة معلم
                         </a>
                     </li>
+                    @endcan
+                    @can('grading.view_gradebook')
                     <li>
                         <a href="{{ route('grading.gradebooks') }}" wire:navigate
                             class="sidebar-submenu-link {{ request()->routeIs('grading.gradebooks') || request()->routeIs('grading.gradebook.*') ? 'active' : '' }}">
                             📝 دفتر الدرجات
                         </a>
                     </li>
+                    @endcan
+                    @can('teacher.timetable')
                     <li>
                         <a href="{{ route('teacher.timetable') }}" wire:navigate
                             class="sidebar-submenu-link {{ request()->routeIs('teacher.timetable') ? 'active' : '' }}">
                             📅 جدولي الأسبوعي
                         </a>
                     </li>
+                    @endcan
+                    @can('attendance.view')
                     <li>
                         <a href="{{ route('teacher.attendance.report') }}" wire:navigate
                             class="sidebar-submenu-link {{ request()->routeIs('teacher.attendance.report') ? 'active' : '' }}">
                             📊 تقرير الحضور
                         </a>
                     </li>
+                    @endcan
+                    @can('teacher.homework')
                     <li>
                         <a href="{{ route('teacher.homework.index') }}" wire:navigate
                             class="sidebar-submenu-link {{ request()->routeIs('teacher.homework.*') || request()->routeIs('grading.homework.*') ? 'active' : '' }}">
                             📚 الواجبات
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </div>
+            @endcanany
 
             <!-- HR - شؤون الموظفين -->
+            @canany(['staff.view', 'staff.create', 'attendance.manage', 'leave.request', 'leaves.approve'])
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('hr')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'hr' }">
@@ -357,8 +376,10 @@
                     </li>
                 </ul>
             </div>
+            @endcanany
 
             <!-- Payroll - الرواتب -->
+            @can('payroll.manage')
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('payroll')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'payroll' }">
@@ -412,9 +433,10 @@
                     </li>
                 </ul>
             </div>
+            @endcan
 
             <!-- Finance - المالية -->
-            @can('finance.apply_discount')
+            @can('finance.view')
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('finance')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'finance' }">
@@ -442,6 +464,7 @@
             @endcan
 
             <!-- Guardians with Submenu -->
+            @can('guardians.view')
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('guardians')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'guardians' }">
@@ -471,8 +494,10 @@
                     </li>
                 </ul>
             </div>
+            @endcan
 
             <!-- Classes with Submenu -->
+            @can('classes.manage')
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('classes')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'classes' }">
@@ -493,8 +518,10 @@
                     <li><a href="#" class="sidebar-submenu-link">القاعات الدراسية</a></li>
                 </ul>
             </div>
+            @endcan
 
             <!-- Subjects with Submenu -->
+            @can('curriculum.manage')
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('subjects')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'subjects' }">
@@ -516,8 +543,10 @@
                     <li><a href="#" class="sidebar-submenu-link">المناهج الدراسية</a></li>
                 </ul>
             </div>
+            @endcan
 
             <!-- Exams with Submenu -->
+            @can('marks.override')
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('exams')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'exams' }">
@@ -549,8 +578,10 @@
                     <li><a href="#" class="sidebar-submenu-link">📊 النتائج</a></li>
                 </ul>
             </div>
+            @endcan
 
             <!-- Promotion - نظام الترحيل -->
+            @can('students.promote')
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('promotion')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'promotion' }">
@@ -586,8 +617,10 @@
                     </li>
                 </ul>
             </div>
+            @endcan
 
             <!-- Attendance with Submenu -->
+            @canany(['attendance.manage', 'attendance.view', 'attendance.take'])
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('attendance')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'attendance' }">
@@ -616,6 +649,7 @@
                     </li>
                 </ul>
             </div>
+            @endcanany
 
             <!-- Announcements -->
             <div class="sidebar-nav-item">
@@ -646,6 +680,7 @@
             </div>
 
             <!-- Settings with Submenu -->
+            @canany(['settings.edit', 'roles.manage', 'sensitive.manage'])
             <div class="sidebar-nav-item">
                 <button @click="toggleSubmenu('settings')" class="sidebar-nav-link sidebar-dropdown-toggle"
                     :class="{ 'active open': activeSubmenu === 'settings' }">
@@ -671,9 +706,18 @@
                             الصلاحيات والأدوار
                         </a>
                     </li>
+                    @can('sensitive.manage')
+                        <li>
+                            <a href="{{ route('security.sensitive-access') }}" wire:navigate
+                                class="sidebar-submenu-link {{ request()->routeIs('security.sensitive-access') ? 'active' : '' }}">
+                                رمز الأمان الحساس
+                            </a>
+                        </li>
+                    @endcan
                     <li><a href="#" class="sidebar-submenu-link">النسخ الاحتياطي</a></li>
                 </ul>
             </div>
+            @endcanany
         </nav>
 
         <!-- Sidebar Footer -->

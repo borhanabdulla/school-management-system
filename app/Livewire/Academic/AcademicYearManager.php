@@ -17,6 +17,7 @@ use App\Domains\Academic\AcademicYear\Actions\ActivateAcademicYearAction;
 use App\Domains\Academic\AcademicYear\Actions\DeleteAcademicYearAction;
 use App\Domains\Academic\AcademicYear\Actions\CloseAcademicYearAction;
 use App\Domains\Academic\AcademicYear\Actions\ArchiveAcademicYearAction;
+use App\Infrastructure\Security\SensitiveAccess;
 
 class AcademicYearManager extends Component
 {
@@ -43,17 +44,19 @@ class AcademicYearManager extends Component
     // حقن السيرفس
     protected AcademicYearService $service;
     protected \App\Domains\Academic\AcademicYear\Services\AcademicYearLookupService $lookupService;
-    protected \App\Domains\Academic\AcademicYear\Validation\AcademicYearValidator $validator;
 
     // نقوم بحقن السيرفس هنا ليتم استخدامه في كل الدوال
     public function boot(
         AcademicYearService $service,
-        \App\Domains\Academic\AcademicYear\Services\AcademicYearLookupService $lookupService,
-        \App\Domains\Academic\AcademicYear\Validation\AcademicYearValidator $validator
+        \App\Domains\Academic\AcademicYear\Services\AcademicYearLookupService $lookupService
     ) {
         $this->service = $service;
         $this->lookupService = $lookupService;
-        $this->validator = $validator;
+    }
+
+    public function hydrate(): void
+    {
+        $this->ensureSensitiveAccess();
     }
 
     public function getStatusesProperty()
@@ -160,6 +163,10 @@ class AcademicYearManager extends Component
 
     public function create()
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         $this->form->reset();
         $this->form->status = AcademicYearStatus::Pending->value;
         $this->isEditing = false;
@@ -171,6 +178,10 @@ class AcademicYearManager extends Component
 
     public function edit(AcademicYear $academicYear)
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         $this->form->setModel($academicYear);
         $this->isEditing = true;
         $this->editingYear = $academicYear;
@@ -181,6 +192,10 @@ class AcademicYearManager extends Component
     // تعديل الاسم فقط للسنة النشطة
     public function editName(AcademicYear $academicYear)
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         if (!$academicYear->canEditName()) {
             $this->dispatch('error', message: 'يمكن تعديل اسم السنة النشطة أو المغلقة فقط.');
             return;
@@ -195,6 +210,10 @@ class AcademicYearManager extends Component
 
     public function nextStep()
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         if ($this->step === 1) {
             // تحقق مبدئي للخطوة الأولى
             $this->form->validate([
@@ -289,6 +308,10 @@ class AcademicYearManager extends Component
 
     public function save()
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         $this->form->validate(); // التحقق النهائي
 
         try {
@@ -331,6 +354,10 @@ class AcademicYearManager extends Component
 
     public function archive($id)
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         try {
             $year = AcademicYear::findOrFail($id);
             app(ArchiveAcademicYearAction::class)->execute($year);
@@ -342,6 +369,10 @@ class AcademicYearManager extends Component
 
     public function delete($id)
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         try {
             // استخدام Action للحذف
             app(DeleteAcademicYearAction::class)->execute($id);
@@ -355,6 +386,10 @@ class AcademicYearManager extends Component
 
     public function activateYear($id)
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         try {
             $year = AcademicYear::findOrFail($id);
             app(ActivateAcademicYearAction::class)->execute($year);
@@ -368,6 +403,10 @@ class AcademicYearManager extends Component
 
     public function cloneYear($id)
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         try {
             $targetYear = AcademicYear::findOrFail($id);
 
@@ -391,6 +430,10 @@ class AcademicYearManager extends Component
 
     public function closeYear($id)
     {
+        if (!$this->ensureSensitiveAccess()) {
+            return;
+        }
+
         try {
             $year = AcademicYear::findOrFail($id);
             app(CloseAcademicYearAction::class)->execute($year);
@@ -404,5 +447,24 @@ class AcademicYearManager extends Component
     public function closeModal()
     {
         $this->showModal = false;
+    }
+
+    protected function ensureSensitiveAccess(): bool
+    {
+        if (!auth()->check() || !auth()->user()->can('close.year')) {
+            abort(403, 'ليس لديك صلاحية إدارة السنة الدراسية.');
+        }
+
+        if (SensitiveAccess::isVerified(request())) {
+            return true;
+        }
+
+        if (!session()->has('sensitive_access_intended')) {
+            $intended = request()->headers->get('referer') ?: url()->current();
+            session(['sensitive_access_intended' => $intended]);
+        }
+        $this->redirect(route('security.sensitive-verify'), navigate: true);
+
+        return false;
     }
 }

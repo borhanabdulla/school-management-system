@@ -3,7 +3,6 @@
 namespace App\Domains\Academic\Student\Services;
 
 use App\Domains\Academic\AcademicYear\Models\AcademicYear;
-use App\Domains\Academic\Student\Models\Student;
 use App\Domains\Academic\Student\Models\StudentEnrollment;
 use App\Domains\Academic\Student\Enums\EnrollmentStatus;
 use Illuminate\Database\Eloquent\Builder;
@@ -44,27 +43,6 @@ class StudentEnrollmentQueryService
         return StudentEnrollment::where('academic_year_id', $year->id)
             ->whereIn('status', $this->getEligibleStatusValues())
             ->select('student_id');
-    }
-
-    /**
-     * جلب الطلاب مع enrollment.grade_id للسنة المحددة
-     * يستخدم JOIN بدلاً من whereHas لنتمكن من select أعمدة enrollment
-     */
-    public function studentsWithEnrollmentGrade(AcademicYear $year): Builder
-    {
-        return Student::query()
-            ->join('student_enrollments', function ($join) use ($year) {
-                $join->on('students.id', '=', 'student_enrollments.student_id')
-                    ->where('student_enrollments.academic_year_id', '=', $year->id)
-                    ->whereIn('student_enrollments.status', $this->getEligibleStatusValues());
-            })
-            ->select([
-                'students.id',
-                'students.full_name_ar',
-                'students.status',
-                'student_enrollments.grade_id as enrollment_grade_id',
-                'student_enrollments.class_section_id as enrollment_section_id',
-            ]);
     }
 
     /**

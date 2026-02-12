@@ -20,10 +20,9 @@
             <div class="relative group">
                 <input wire:model="form.first_name_ar" type="text" id="first_name_ar"
                     class="peer w-full px-5 py-4 bg-background dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-foreground dark:text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all backdrop-blur-sm"
-                    placeholder="الاسم الأول">
+                    placeholder=" ">
                 <label for="first_name_ar"
-                    class="absolute right-5 top-4 text-gray-500 dark:text-white/50 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 dark:peer-placeholder-shown:text-white/50 peer-placeholder-shown:top-4 peer-focus:-top-3 peer-focus:text-emerald-600 dark:peer-focus:text-emerald-400 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900/80 peer-focus:px-2 peer-focus:rounded-full pointer-events-none
-                    {{ $form->first_name_ar ? '-top-3 text-xs bg-background dark:bg-gray-900/80 px-2 rounded-full' : '' }}">
+                    class="absolute right-5 -top-3 text-xs text-gray-500 dark:text-white/50 bg-background dark:bg-gray-900/80 px-2 rounded-full transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 dark:peer-placeholder-shown:text-white/50 peer-focus:-top-3 peer-focus:text-emerald-600 dark:peer-focus:text-emerald-400 peer-focus:text-xs peer-focus:bg-background dark:peer-focus:bg-gray-900/80 peer-focus:px-2 peer-focus:rounded-full pointer-events-none">
                     الاسم الأول (بالعربية) <span class="text-red-500 dark:text-red-400">*</span>
                 </label>
                 @error('form.first_name_ar')
@@ -34,10 +33,9 @@
             <div class="relative group">
                 <input wire:model="form.family_name_ar" type="text" id="family_name_ar"
                     class="peer w-full px-5 py-4 bg-background dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-foreground dark:text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all backdrop-blur-sm"
-                    placeholder="اسم العائلة">
+                    placeholder=" ">
                 <label for="family_name_ar"
-                    class="absolute right-5 top-4 text-gray-500 dark:text-white/50 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 dark:peer-placeholder-shown:text-white/50 peer-placeholder-shown:top-4 peer-focus:-top-3 peer-focus:text-emerald-600 dark:peer-focus:text-emerald-400 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900/80 peer-focus:px-2 peer-focus:rounded-full pointer-events-none
-                    {{ $form->family_name_ar ? '-top-3 text-xs bg-background dark:bg-gray-900/80 px-2 rounded-full' : '' }}">
+                    class="absolute right-5 -top-3 text-xs text-gray-500 dark:text-white/50 bg-background dark:bg-gray-900/80 px-2 rounded-full transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 dark:peer-placeholder-shown:text-white/50 peer-focus:-top-3 peer-focus:text-emerald-600 dark:peer-focus:text-emerald-400 peer-focus:text-xs peer-focus:bg-background dark:peer-focus:bg-gray-900/80 peer-focus:px-2 peer-focus:rounded-full pointer-events-none">
                     اسم العائلة (بالعربية) <span class="text-red-500 dark:text-red-400">*</span>
                 </label>
                 @error('form.family_name_ar')
@@ -77,10 +75,9 @@
             <div class="relative group">
                 <input wire:model.blur="form.national_id" type="text" id="national_id"
                     class="peer w-full px-5 py-4 bg-background dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-foreground dark:text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all backdrop-blur-sm"
-                    placeholder="الرقم القومي">
+                    placeholder=" ">
                 <label for="national_id"
-                    class="absolute right-5 top-4 text-gray-500 dark:text-white/50 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 dark:peer-placeholder-shown:text-white/50 peer-placeholder-shown:top-4 peer-focus:-top-3 peer-focus:text-emerald-600 dark:peer-focus:text-emerald-400 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900/80 peer-focus:px-2 peer-focus:rounded-full pointer-events-none
-                    {{ $form->national_id ? '-top-3 text-xs bg-background dark:bg-gray-900/80 px-2 rounded-full' : '' }}">
+                    class="absolute right-5 -top-3 text-xs text-gray-500 dark:text-white/50 bg-background dark:bg-gray-900/80 px-2 rounded-full transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 dark:peer-placeholder-shown:text-white/50 peer-focus:-top-3 peer-focus:text-emerald-600 dark:peer-focus:text-emerald-400 peer-focus:text-xs peer-focus:bg-background dark:peer-focus:bg-gray-900/80 peer-focus:px-2 peer-focus:rounded-full pointer-events-none">
                     الرقم القومي / الإقامة
                 </label>
                 @error('form.national_id')
@@ -114,6 +111,26 @@
                     class="absolute right-5 -top-3 text-xs text-gray-500 dark:text-white/50 bg-background dark:bg-gray-900/80 px-2 rounded-full transition-all peer-focus:text-emerald-600 dark:peer-focus:text-emerald-400 pointer-events-none">
                     فصيلة الدم
                 </label>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="relative group">
+                <label for="student_photo" class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-3">
+                    صورة الطالب (اختياري)
+                </label>
+                <input wire:model="form.photo" type="file" id="student_photo" accept="image/png,image/jpeg"
+                    class="block w-full text-sm text-gray-700 dark:text-white file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/10 file:text-emerald-700 dark:file:text-emerald-300 hover:file:bg-emerald-500/20 transition-all border border-gray-200 dark:border-gray-700 rounded-2xl bg-background dark:bg-gray-900/50">
+                @error('form.photo')
+                    <span class="text-red-500 dark:text-red-400 text-xs mt-2 block">{{ $message }}</span>
+                @enderror
+
+                @if ($form->photo)
+                    <div class="mt-4">
+                        <img src="{{ $form->photo->temporaryUrl() }}" alt="معاينة الصورة"
+                            class="w-28 h-28 rounded-2xl object-cover border border-gray-200 dark:border-gray-700 shadow-sm">
+                    </div>
+                @endif
             </div>
         </div>
     </div>

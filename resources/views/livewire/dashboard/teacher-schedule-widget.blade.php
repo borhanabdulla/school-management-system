@@ -50,12 +50,16 @@
                         
                         <div class="flex items-center gap-4">
                             <!-- Time Slot -->
+                            @php
+                                $startTime = $timetable->timeSlot?->start_time;
+                                $startLabel = is_string($startTime) ? $startTime : ($startTime?->format('H:i') ?? '');
+                            @endphp
                             <div class="flex flex-col items-center justify-center w-14 h-14 rounded-xl border
                                 {{ $timetable->is_recorded 
                                     ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600 text-gray-500' 
                                     : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' }}">
                                 <span class="text-[10px] font-bold uppercase tracking-wider">{{ $timetable->timeSlot->label }}</span>
-                                <span class="text-sm font-bold">{{ $timetable->timeSlot->start_time->format('H:i') }}</span>
+                                <span class="text-sm font-bold">{{ $startLabel }}</span>
                             </div>
 
                             <!-- Class Info -->

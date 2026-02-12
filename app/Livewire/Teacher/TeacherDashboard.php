@@ -3,6 +3,7 @@
 namespace App\Livewire\Teacher;
 
 use App\Domains\Academic\Attendance\Models\Attendance;
+use App\Domains\Academic\ClassSection\Models\ClassSection;
 use App\Domains\Academic\CourseOffering\Models\CourseOffering;
 use App\Domains\HR\Teacher\Models\Teacher;
 use App\Domains\Academic\Timetable\Models\Timetable;
@@ -34,6 +35,8 @@ class TeacherDashboard extends Component
         TeacherLookupService $teacherLookup,
         AttendanceSettingsService $attendanceSettings
     ) {
+        abort_unless(auth()->user()->can('teacher.dashboard'), 403, 'ليس لديك صلاحية الوصول للوحة المعلم.');
+
         // 1. البيانات الثابتة من الكاش
         $this->activeYear = $context->activeYear();
         $this->activeTerm = $context->activeTerm();
@@ -70,15 +73,35 @@ class TeacherDashboard extends Component
      * - UPCOMING: قادمة (رمادي)
      */
     #[Computed]
+    public function canTakeAttendance(): bool
+    {
+        if (!$this->teacherId || !$this->activeYear) {
+            return false;
+        }
+
+        if ($this->responsibleRole === 'admin_staff') {
+            return false;
+        }
+
+        if ($this->responsibleRole === 'class_teacher') {
+            return ClassSection::query()
+                ->where('academic_year_id', $this->activeYear->id)
+                ->where('homeroom_teacher_id', $this->teacherId)
+                ->exists();
+        }
+
+        return true;
+    }
+
+    #[Computed]
     public function todaysTimeline()
     {
-        if (!$this->teacherId)
+        if (!$this->teacherId || !$this->canTakeAttendance)
             return collect();
 
         $now = Carbon::now();
         $dayOfWeek = $now->dayOfWeek;
         $today = $now->format('Y-m-d');
-        $currentTime = $now->format('H:i:s');
 
         // استعلام محسّن: Eager Loading + Select Specific Columns
         $query = Timetable::query()
@@ -132,17 +155,17 @@ class TeacherDashboard extends Component
         // حساب الحالة لكل حصة
         return $timetables
             ->sortBy('timeSlot.order_index')
-            ->map(function ($timetable) use ($attendedSlots, $currentTime) {
-                $startTime = $timetable->timeSlot->start_time?->format('H:i:s');
-                $endTime = $timetable->timeSlot->end_time?->format('H:i:s');
+            ->map(function ($timetable) use ($attendedSlots, $now, $today) {
+                $startAt = $timetable->timeSlot?->getStartTimeCarbon($today);
+                $endAt = $timetable->timeSlot?->getEndTimeCarbon($today);
                 $slotId = $timetable->time_slot_id;
 
                 // منطق الحالة (Priority Order)
                 if (isset($attendedSlots[$slotId])) {
                     $status = 'DONE';
-                } elseif ($currentTime >= $startTime && $currentTime <= $endTime) {
+                } elseif ($startAt && $endAt && $now->betweenIncluded($startAt, $endAt)) {
                     $status = 'ACTIVE';
-                } elseif ($currentTime > $endTime) {
+                } elseif ($endAt && $now->greaterThan($endAt)) {
                     $status = 'MISSED';
                 } else {
                     $status = 'UPCOMING';
@@ -152,8 +175,8 @@ class TeacherDashboard extends Component
                     'id' => $timetable->id,
                     'subject' => $timetable->courseOffering?->subject?->name ?? 'غير محدد',
                     'section' => $timetable->classSection?->full_name ?? '',
-                    'start_time' => $timetable->timeSlot->start_time?->format('H:i'),
-                    'end_time' => $timetable->timeSlot->end_time?->format('H:i'),
+                    'start_time' => $startAt?->format('H:i') ?? $timetable->timeSlot?->start_time,
+                    'end_time' => $endAt?->format('H:i') ?? $timetable->timeSlot?->end_time,
                     'label' => $timetable->timeSlot->label,
                     'status' => $status,
                 ];
@@ -247,11 +270,20 @@ class TeacherDashboard extends Component
                 },
                 'timeSlot:id,day_of_week,order_index'
             ])
-            ->whereHas(
-                'courseOffering',
-                fn($q) =>
-                $q->where('teacher_id', $this->teacherId)
-                    ->where('academic_year_id', $this->activeYear?->id)
+            ->when(
+                $this->responsibleRole === 'class_teacher',
+                fn($q) => $q->whereHas(
+                    'classSection',
+                    fn($sub) => $sub
+                        ->where('homeroom_teacher_id', $this->teacherId)
+                        ->where('academic_year_id', $this->activeYear?->id)
+                ),
+                fn($q) => $q->whereHas(
+                    'courseOffering',
+                    fn($sub) => $sub
+                        ->where('teacher_id', $this->teacherId)
+                        ->where('academic_year_id', $this->activeYear?->id)
+                )
             )
             ->where('term_id', $this->activeTerm?->id) // ✅ PR0: Scoped to Active Term
             ->get();

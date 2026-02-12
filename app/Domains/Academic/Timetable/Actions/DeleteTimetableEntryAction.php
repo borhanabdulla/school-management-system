@@ -6,6 +6,7 @@ namespace App\Domains\Academic\Timetable\Actions;
 
 use App\Domains\Academic\Timetable\Models\Timetable;
 use App\Domains\Academic\Timetable\Exceptions\CannotDeleteTimetableWithAttendanceException;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -38,6 +39,15 @@ class DeleteTimetableEntryAction
             if (!$timetable) {
                 Log::warning("Timetable entry not found for deletion", ['timetable_id' => $timetableId]);
                 return;
+            }
+
+            if ($timetable->term_id) {
+                app(AcademicWriteGuard::class)->assertTermNotCompleted($timetable->term_id);
+            } else {
+                $timetable->loadMissing('classSection');
+                if ($timetable->classSection?->academic_year_id) {
+                    app(AcademicWriteGuard::class)->assertYearNotClosed($timetable->classSection->academic_year_id);
+                }
             }
 
             // Guard: Check protected relations (uses the relationship defined in PR-1)

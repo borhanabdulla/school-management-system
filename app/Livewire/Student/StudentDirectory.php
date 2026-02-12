@@ -16,6 +16,11 @@ class StudentDirectory extends Component
 {
     use WithPagination;
 
+    public function boot()
+    {
+        abort_unless(auth()->user()->can('students.view'), 403, 'ليس لديك صلاحية عرض قائمة الطلاب.');
+    }
+
     public $search = '';
     public $selectedAcademicYear = '';
     public $selectedGrade = '';

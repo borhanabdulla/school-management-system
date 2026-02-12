@@ -80,7 +80,7 @@ class StaffEdit extends Component
         $this->work_shift_id = $staff->work_shift_id;
         $this->employment_type = $staff->employment_type ?? 'full_time';
         $this->joining_date = $staff->joining_date?->format('Y-m-d') ?? '';
-        $this->status = $staff->status ?? 'active';
+        $this->status = $staff->status?->value ?? 'active';
 
         // Determine role from user roles or staff type
         if ($staff->user && $staff->user->roles->isNotEmpty()) {

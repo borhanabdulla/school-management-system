@@ -11,6 +11,11 @@ class GuardianCreate extends Component
 {
     public GuardianForm $form;
 
+    public function mount()
+    {
+        abort_unless(auth()->user()->can('guardians.create'), 403, 'ليس لديك صلاحية إضافة أولياء أمور.');
+    }
+
     #[Layout('layouts.app')]
     public function render()
     {

@@ -7,6 +7,8 @@ namespace App\Domains\Academic\Grading\Actions\Admin;
 use App\Domains\Academic\Grading\Data\GeneralSettingsData;
 use App\Domains\Academic\Grading\Models\SystemSetting;
 use App\Domains\Academic\Grading\Exceptions\GradingException;
+use App\Domains\Academic\AcademicYear\Models\AcademicYear;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -28,6 +30,7 @@ class SaveGeneralGradingSettingsAction
     {
         $this->authorize();
         $this->validate($data);
+        $this->assertWritable();
 
         // حفظ كل إعداد في system_settings
         SystemSetting::set('grading.default_pass_score', $data->defaultPassScore);
@@ -83,6 +86,14 @@ class SaveGeneralGradingSettingsAction
             if ($weight < 0 || $weight > 100) {
                 throw new GradingException("وزن الفصل #{$termId} يجب أن يكون بين 0 و 100");
             }
+        }
+    }
+
+    private function assertWritable(): void
+    {
+        $yearId = school()->activeYearId() ?? AcademicYear::first()?->id;
+        if ($yearId) {
+            app(AcademicWriteGuard::class)->assertYearNotClosed($yearId);
         }
     }
 }

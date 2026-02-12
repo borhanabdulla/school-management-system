@@ -69,7 +69,7 @@ final class SubjectGradingConfigResolver
         $violations = [];
 
         foreach ($this->validators as $validator) {
-            if (! $validator instanceof GradingConfigValidator) {
+            if (!$validator instanceof GradingConfigValidator) {
                 continue;
             }
 
@@ -84,21 +84,32 @@ final class SubjectGradingConfigResolver
         return $this->warnings[$this->buildKey($courseOffering, $term)] ?? [];
     }
 
+    public function preloadForTerm(Term $term): void
+    {
+        $configs = SubjectGradingConfig::where('term_id', $term->id)
+            ->with(['template.categories.children'])
+            ->get();
+
+        foreach ($configs as $config) {
+            $key = sprintf('%s_%s_%s', $config->grade_id, $config->subject_id, $term->id);
+            $this->cache[$key] = $config;
+        }
+    }
+
     private function fetchConfig(CourseOffering $courseOffering, Term $term): SubjectGradingConfig
     {
         // Binding path: subject_id + grade_id + term_id defines the template for an offering.
         /** @var SubjectGradingConfig|null $config */
+        // Try to fetch from DB if not in cache (fallback)
         $config = SubjectGradingConfig::where('subject_id', $courseOffering->subject_id)
             ->where('grade_id', $courseOffering->classSection?->grade_id)
             ->where('term_id', $term->id)
-            ->with('template.categories')
+            ->with(['template.categories.children'])
             ->first();
 
-        if (! $config || ! $config->template) {
+        if (!$config || !$config->template) {
             throw new MissingSubjectConfigException($courseOffering, $term);
         }
-
-        $config->template->load(['categories' => fn($q) => $q->with('children')]);
 
         return $config;
     }

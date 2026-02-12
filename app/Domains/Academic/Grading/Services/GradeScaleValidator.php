@@ -13,14 +13,14 @@ final class GradeScaleValidator
     {
         return [
             ['grade' => 'A+', 'min' => 95, 'max' => 100, 'color' => '#22c55e'],
-            ['grade' => 'A', 'min' => 90, 'max' => 94, 'color' => '#22c55e'],
-            ['grade' => 'B+', 'min' => 85, 'max' => 89, 'color' => '#3b82f6'],
-            ['grade' => 'B', 'min' => 80, 'max' => 84, 'color' => '#3b82f6'],
-            ['grade' => 'C+', 'min' => 75, 'max' => 79, 'color' => '#eab308'],
-            ['grade' => 'C', 'min' => 70, 'max' => 74, 'color' => '#eab308'],
-            ['grade' => 'D+', 'min' => 65, 'max' => 69, 'color' => '#f97316'],
-            ['grade' => 'D', 'min' => 60, 'max' => 64, 'color' => '#f97316'],
-            ['grade' => 'F', 'min' => 0, 'max' => 59, 'color' => '#ef4444'],
+            ['grade' => 'A', 'min' => 90, 'max' => 95, 'color' => '#22c55e'],
+            ['grade' => 'B+', 'min' => 85, 'max' => 90, 'color' => '#3b82f6'],
+            ['grade' => 'B', 'min' => 80, 'max' => 85, 'color' => '#3b82f6'],
+            ['grade' => 'C+', 'min' => 75, 'max' => 80, 'color' => '#eab308'],
+            ['grade' => 'C', 'min' => 70, 'max' => 75, 'color' => '#eab308'],
+            ['grade' => 'D+', 'min' => 65, 'max' => 70, 'color' => '#f97316'],
+            ['grade' => 'D', 'min' => 60, 'max' => 65, 'color' => '#f97316'],
+            ['grade' => 'F', 'min' => 0, 'max' => 60, 'color' => '#ef4444'],
         ];
     }
 

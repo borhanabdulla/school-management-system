@@ -91,8 +91,8 @@ class TimetableTemplateForm extends Form
             'day_of_week' => $s->day_of_week,
             'label' => $s->label,
             'order_index' => $s->order_index,
-            'start_time' => $s->start_time?->format('H:i') ?? '',
-            'end_time' => $s->end_time?->format('H:i') ?? '',
+            'start_time' => is_string($s->start_time) ? $s->start_time : ($s->start_time?->format('H:i') ?? ''),
+            'end_time' => is_string($s->end_time) ? $s->end_time : ($s->end_time?->format('H:i') ?? ''),
             'type' => $s->type?->value ?? 'academic',
             'is_attendance_checkpoint' => $s->is_attendance_checkpoint,
         ])->toArray();

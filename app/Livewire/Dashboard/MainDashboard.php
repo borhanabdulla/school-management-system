@@ -51,7 +51,13 @@ class MainDashboard extends Component
 
     public function mount(): void
     {
-        $this->academicYearId = school()->activeYearId();
+        $this->academicYearId = AcademicYear::active()->first()?->id;
+
+        // Force eager load to bypass wire:init issues
+        $this->loadHeatmap = true;
+        $this->loadPareto = true;
+        $this->loadAging = true;
+
         if ($this->academicYearId) {
             $this->termId = $this->activeTermId($this->academicYearId);
         }

@@ -18,6 +18,7 @@ use App\Domains\Academic\Grading\Models\SystemSetting;
 use App\Domains\Academic\Grading\Actions\FinalizeTermCourseworkAction;
 use App\Domains\Academic\Grade\Models\Grade;
 use App\Domains\Academic\Subject\Models\Subject;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\Term\Services\TermLookupService;
 use Illuminate\Support\Collection;
@@ -128,7 +129,12 @@ class GradingSettingsService
             return false;
         }
 
-        return (int) $template->term_id === $termId;
+        $term = Term::find($termId);
+        if (! $term) {
+            return false;
+        }
+
+        return $template->matchesTerm($term);
     }
 
     public function saveGeneralSettings(GeneralSettingsData $data): void
@@ -137,6 +143,8 @@ class GradingSettingsService
         if (abs($totalWeight - 100.0) > 0.01) {
             throw new \InvalidArgumentException('مجموع أوزان الفصول يجب أن يساوي 100%.');
         }
+
+        $this->assertYearWritable(school()->activeYearId() ?? AcademicYear::first()?->id);
 
         SystemSetting::set('grading.default_pass_score', $data->defaultPassScore);
         SystemSetting::set('grading.grace_marks_limit', $data->graceMarksLimit);
@@ -157,6 +165,7 @@ class GradingSettingsService
 
     public function saveGradeScale(GradeScaleData $scale): void
     {
+        $this->assertYearWritable(school()->activeYearId() ?? AcademicYear::first()?->id);
         SystemSetting::set('grading.scale', $scale->scale, 'grading', 'json');
         $this->gradingLookup->invalidateScaleCache();
     }
@@ -170,6 +179,13 @@ class GradingSettingsService
 
     public function saveTemplate(?int $id, TemplateData $payload): GradingTemplate
     {
+        $term = $payload->termId ? Term::find($payload->termId) : null;
+        if ($term) {
+            app(AcademicWriteGuard::class)->assertWritable($term->academic_year_id, $term->id);
+        } else {
+            $this->assertYearWritable($payload->academicYearId);
+        }
+
         return GradingTemplate::updateOrCreate(
             ['id' => $id],
             [
@@ -321,6 +337,11 @@ class GradingSettingsService
             throw new \InvalidArgumentException('القالب المختار لا يطابق الفصل الدراسي الحالي.');
         }
 
+        $term = Term::find($data->termId);
+        if ($term) {
+            app(AcademicWriteGuard::class)->assertWritable($term->academic_year_id, $term->id);
+        }
+
         $config = SubjectGradingConfig::firstOrNew([
             'subject_id' => $data->subjectId,
             'grade_id' => $data->gradeId,
@@ -333,8 +354,7 @@ class GradingSettingsService
 
     public function loadMonthlySettings(): ?MonthlySettingsData
     {
-        $yearId = AcademicYear::where('status', \App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus::Active)
-                ->first()?->id
+        $yearId = school()->activeYearId()
             ?? AcademicYear::first()?->id;
 
         if (! $yearId) {
@@ -345,6 +365,10 @@ class GradingSettingsService
         $categories = GradebookSettings::normalizeMonthlyCategories(
             $settings->monthly_categories ?? []
         );
+        if ($categories === []) {
+            $categories = GradebookSettings::getDefaultCategories();
+            $settings->update(['monthly_categories' => $categories]);
+        }
 
         return new MonthlySettingsData(
             categories: $categories,
@@ -357,13 +381,14 @@ class GradingSettingsService
 
     public function saveMonthlySettings(MonthlySettingsData $data): void
     {
-        $yearId = AcademicYear::where('status', \App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus::Active)
-                ->first()?->id
+        $yearId = school()->activeYearId()
             ?? AcademicYear::first()?->id;
 
         if (! $yearId) {
             return;
         }
+
+        $this->assertYearWritable($yearId);
 
         $settings = GradebookSettings::getForYear($yearId);
 
@@ -374,5 +399,12 @@ class GradingSettingsService
             'attendance_max_score' => $data->attendanceMaxScore,
             'allow_custom_categories' => $data->allowCustomCategories,
         ]);
+    }
+
+    private function assertYearWritable(?int $yearId): void
+    {
+        if ($yearId) {
+            app(AcademicWriteGuard::class)->assertYearNotClosed($yearId);
+        }
     }
 }

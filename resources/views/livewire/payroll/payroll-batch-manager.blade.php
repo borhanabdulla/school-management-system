@@ -43,7 +43,7 @@
                         'approved' => ['color' => 'green', 'icon' => '✅', 'label' => 'معتمد'],
                         'paid' => ['color' => 'emerald', 'icon' => '💰', 'label' => 'تم الدفع'],
                     ];
-                    $config = $statusConfig[$batch->status] ?? $statusConfig['draft'];
+                    $config = $statusConfig[$batch->status->value] ?? $statusConfig['draft'];
                 @endphp
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all">
                     {{-- Card Header --}}

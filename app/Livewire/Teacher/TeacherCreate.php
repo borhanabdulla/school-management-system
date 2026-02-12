@@ -21,6 +21,7 @@ class TeacherCreate extends Component
 
     public function mount()
     {
+        abort_unless(auth()->user()->can('staff.create'), 403, 'ليس لديك صلاحية إضافة معلمين.');
         $this->form->hire_date = now()->format('Y-m-d');
         $this->loadSpecializations();
     }

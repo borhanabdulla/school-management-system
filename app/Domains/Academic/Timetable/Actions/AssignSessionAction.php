@@ -50,6 +50,14 @@ class AssignSessionAction
             $section = ClassSection::findOrFail($sectionId);
             $slot = TimeSlot::with('template')->findOrFail($slotId);
 
+            if ($section->academic_year_id !== $yearId) {
+                throw InvalidOperationException::make('الشعبة المحددة لا تتبع للسنة الدراسية المختارة.');
+            }
+
+            if (!$slot->isAssignable()) {
+                throw InvalidOperationException::make('الحصة المحددة غير قابلة لتعيين مادة أو معلم.');
+            }
+
             // التحقق من أن الحصة مرتبطة بالقالب الصحيح للشعبة
             if ($slot->template) {
                 $isValid = DB::table('grade_timetable_template')

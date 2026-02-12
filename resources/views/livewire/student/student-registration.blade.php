@@ -77,7 +77,7 @@
                             <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 19l-7-7 7-7"></path>
+                                    d="M9 5l7 7-7 7"></path>
                             </svg>
                             السابق
                         </button>
@@ -95,7 +95,7 @@
                             <svg wire:loading.remove
                                 class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
                                 </path>
                             </svg>
                             <svg wire:loading class="w-4 h-4 animate-spin" fill="none" stroke="currentColor"

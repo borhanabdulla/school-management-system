@@ -5,7 +5,6 @@ namespace App\Livewire\Teacher\Grading;
 use App\Domains\Academic\CourseOffering\Models\CourseOffering;
 use App\Domains\HR\Teacher\Models\Teacher;
 use App\Domains\Academic\AcademicYear\Models\AcademicYear;
-use App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
@@ -18,7 +17,8 @@ class TeacherGradebooks extends Component
 
     public function mount()
     {
-        $this->academicYearId = AcademicYear::where('status', AcademicYearStatus::Active)->first()?->id;
+        abort_unless(auth()->user()->can('grading.view_gradebook'), 403, 'ليس لديك صلاحية لعرض دفتر الدرجات.');
+        $this->academicYearId = school()->activeYearId();
     }
 
     #[Computed]

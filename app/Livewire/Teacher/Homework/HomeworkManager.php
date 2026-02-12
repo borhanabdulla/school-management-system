@@ -52,6 +52,12 @@ class HomeworkManager extends Component
     public function mount($courseOfferingId)
     {
         $this->courseOfferingId = $courseOfferingId;
+
+        $teacherId = auth()->user()?->teacher?->id;
+        $courseOffering = CourseOffering::findOrFail($courseOfferingId);
+        if (!$teacherId || $courseOffering->teacher_id !== $teacherId) {
+            abort(403, 'لا يمكنك إدارة واجبات هذه المادة.');
+        }
         $this->resetForm();
     }
 

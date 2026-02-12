@@ -205,7 +205,7 @@
                         class="peer w-full px-5 py-4 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                         placeholder=" ">
                     <label
-                        class="absolute right-5 top-4 text-gray-500 dark:text-white/50 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900 peer-focus:px-2 peer-focus:rounded-full peer-placeholder-shown:top-4 peer-placeholder-shown:text-base">الاسم
+                        class="absolute right-5 -top-3 text-gray-500 dark:text-white/50 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900 peer-focus:px-2 peer-focus:rounded-full peer-placeholder-shown:top-4 peer-placeholder-shown:text-base">الاسم
                         الأول</label>
                     @error('form.guardian_first_name')
                         <span class="text-red-400 text-xs mt-2 block">{{ $message }}</span>
@@ -216,7 +216,7 @@
                         class="peer w-full px-5 py-4 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                         placeholder=" ">
                     <label
-                        class="absolute right-5 top-4 text-gray-500 dark:text-white/50 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900 peer-focus:px-2 peer-focus:rounded-full peer-placeholder-shown:top-4 peer-placeholder-shown:text-base">اسم
+                        class="absolute right-5 -top-3 text-gray-500 dark:text-white/50 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900 peer-focus:px-2 peer-focus:rounded-full peer-placeholder-shown:top-4 peer-placeholder-shown:text-base">اسم
                         العائلة</label>
                     @error('form.guardian_last_name')
                         <span class="text-red-400 text-xs mt-2 block">{{ $message }}</span>
@@ -227,7 +227,7 @@
                         class="peer w-full px-5 py-4 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                         placeholder=" ">
                     <label
-                        class="absolute right-5 top-4 text-gray-500 dark:text-white/50 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900 peer-focus:px-2 peer-focus:rounded-full peer-placeholder-shown:top-4 peer-placeholder-shown:text-base">رقم
+                        class="absolute right-5 -top-3 text-gray-500 dark:text-white/50 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900 peer-focus:px-2 peer-focus:rounded-full peer-placeholder-shown:top-4 peer-placeholder-shown:text-base">رقم
                         الهاتف</label>
                     @error('form.guardian_phone')
                         <span class="text-red-400 text-xs mt-2 block">{{ $message }}</span>
@@ -238,7 +238,7 @@
                         class="peer w-full px-5 py-4 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                         placeholder=" ">
                     <label
-                        class="absolute right-5 top-4 text-gray-500 dark:text-white/50 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900 peer-focus:px-2 peer-focus:rounded-full peer-placeholder-shown:top-4 peer-placeholder-shown:text-base">الرقم
+                        class="absolute right-5 -top-3 text-gray-500 dark:text-white/50 text-sm transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:bg-white dark:peer-focus:bg-gray-900 peer-focus:px-2 peer-focus:rounded-full peer-placeholder-shown:top-4 peer-placeholder-shown:text-base">الرقم
                         القومي</label>
                     @error('form.guardian_national_id')
                         <span class="text-red-400 text-xs mt-2 block">{{ $message }}</span>

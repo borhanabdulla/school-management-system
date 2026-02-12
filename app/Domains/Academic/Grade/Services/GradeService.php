@@ -71,6 +71,10 @@ class GradeService
             throw new Exception("لا يمكن حذف الصف الدراسي لأنه مرتبط بمواد دراسية.");
         }
 
+        if ($grade->enrollments()->exists()) {
+            throw new Exception("لا يمكن حذف الصف الدراسي لأنه مرتبط بتسجيلات طلاب.");
+        }
+
         // فك الارتباط الآمن قبل الحذف
         Grade::where('next_grade_id', $grade->id)->update(['next_grade_id' => null]);
 
@@ -82,6 +86,17 @@ class GradeService
 
     protected function validateGradeRules(array $data, $ignoreId = null): void
     {
+        if (isset($data['educational_stage_id']) && isset($data['name'])) {
+            $exists = Grade::where('educational_stage_id', $data['educational_stage_id'])
+                ->where('name', $data['name'])
+                ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+                ->exists();
+
+            if ($exists) {
+                throw ValidationException::withMessages(['name' => 'يوجد صف آخر بنفس الاسم في هذه المرحلة.']);
+            }
+        }
+
         if (isset($data['educational_stage_id']) && isset($data['level_order'])) {
             $exists = Grade::where('educational_stage_id', $data['educational_stage_id'])
                 ->where('level_order', $data['level_order'])

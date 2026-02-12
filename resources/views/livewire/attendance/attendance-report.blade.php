@@ -107,7 +107,7 @@
                                 {{-- Sticky Student Name --}}
                                 <td class="sticky right-0 z-10 bg-white dark:bg-gray-800 p-3 text-right font-medium text-gray-900 dark:text-white border-l border-gray-200 dark:border-gray-600">
                                     <div class="flex items-center gap-2">
-                                        <span>{{ $student->full_name }}</span>
+                                        <span>{{ $student->full_name_ar ?: $student->full_name_en ?: $student->admission_number }}</span>
                                         <span class="text-[10px] text-gray-400">{{ $student->admission_number }}</span>
                                     </div>
                                 </td>

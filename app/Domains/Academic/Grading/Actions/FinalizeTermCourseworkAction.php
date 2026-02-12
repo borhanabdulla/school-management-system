@@ -10,6 +10,7 @@ use App\Domains\Academic\CourseOffering\Models\CourseOffering;
 use App\Domains\Academic\Grading\Models\SubjectGradingConfig;
 use App\Domains\Academic\Services\AcademicWriteGuard;
 use App\Domains\Academic\Grading\Services\GradingHealthGate;
+use App\Domains\Academic\Student\Models\StudentEnrollment;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -81,8 +82,18 @@ class FinalizeTermCourseworkAction
             return;
         }
 
-        // 3. جلب طلاب الشعبة وإعادة التجميع عبر المابينغ
-        $students = $courseOffering->classSection->students;
+        // 3. جلب طلاب الشعبة عبر التسجيلات (حتى لا نتأثر بالترحيل)
+        $enrollments = StudentEnrollment::query()
+            ->where('academic_year_id', $term->academic_year_id)
+            ->where('class_section_id', $courseOffering->class_section_id)
+            ->with('student')
+            ->get();
+
+        $students = $enrollments
+            ->pluck('student')
+            ->filter()
+            ->unique('id')
+            ->values();
 
         foreach ($students as $student) {
             try {

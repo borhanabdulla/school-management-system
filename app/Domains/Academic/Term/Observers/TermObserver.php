@@ -4,8 +4,6 @@ namespace App\Domains\Academic\Term\Observers;
 
 use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\Term\Services\TermLookupService;
-use App\Infrastructure\Context\AcademicContextService;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class TermObserver
@@ -54,10 +52,6 @@ class TermObserver
 
     protected function clearCache(): void
     {
-        Cache::forget(TermLookupService::CACHE_KEY_CURRENT);
-        Cache::forget(TermLookupService::CACHE_KEY_ACTIVE_LIST);
-        Cache::forget(TermLookupService::CACHE_KEY_UPCOMING);
-
-        AcademicContextService::getInstance()->invalidateTerm();
+        app(TermLookupService::class)->invalidateCache();
     }
 }

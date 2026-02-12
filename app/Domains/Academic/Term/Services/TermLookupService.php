@@ -115,5 +115,6 @@ class TermLookupService
         Cache::forget(self::CACHE_KEY_CURRENT);
         Cache::forget(self::CACHE_KEY_ACTIVE_LIST);
         Cache::forget(self::CACHE_KEY_UPCOMING);
+        school()->invalidateTerm();
     }
 }

@@ -14,13 +14,14 @@ class StudentRegistrationData extends BaseData
         public readonly array $health_data,
         public readonly array $address,
         public readonly array $documents,
+        public readonly mixed $photo,
         public readonly bool $is_transfer,
         public readonly ?array $previous_history,
         public readonly bool $create_invoice = true
     ) {
     }
 
-    public static function fromLivewire($form, $guardians, $healthConditions, $address, $documents, $isTransfer, $previousHistory): self
+    public static function fromLivewire($form, $guardians, $healthConditions, $address, $documents, $isTransfer, $previousHistory, bool $createInvoice): self
     {
         return new self(
             student: [
@@ -38,9 +39,10 @@ class StudentRegistrationData extends BaseData
             health_data: $healthConditions,
             address: $address,
             documents: $documents,
+            photo: $form->photo ?? null,
             is_transfer: $isTransfer,
             previous_history: $isTransfer ? $previousHistory : null,
-            create_invoice: true
+            create_invoice: $createInvoice
         );
     }
 }

@@ -18,6 +18,7 @@ use App\Domains\Academic\Grading\Data\TemplateData;
 use App\Domains\Academic\Grading\Data\TemplateCategoryData;
 use App\Domains\Academic\Grading\Data\SubjectConfigData;
 use App\Domains\Academic\Grading\Data\MonthlyMappingData;
+use App\Domains\Academic\Grading\Data\MonthlySettingsData;
 use App\Domains\Academic\Grading\Models\GradingTemplate;
 use App\Domains\Academic\Grading\Models\TemplateCategory;
 use App\Domains\Academic\Grading\Services\GradingSettingsService;
@@ -98,7 +99,7 @@ class GradingActionsAdapter
     /**
      * حفظ إعدادات Gradebook الشهرية
      */
-    public function saveGradebookSettings(int $yearId, array $settings): void
+    public function saveGradebookSettings(int $yearId, MonthlySettingsData $settings): void
     {
         $this->saveGradebookSettingsAction->execute($yearId, $settings);
     }
@@ -203,6 +204,16 @@ class GradingActionsAdapter
     public function getRenderData(?int $templateTermId, ?int $subjectGradeId, ?int $subjectTermId): \App\Domains\Academic\Grading\Data\GradingSettingsViewData
     {
         return $this->settingsService->getRenderData($templateTermId, $subjectGradeId, $subjectTermId);
+    }
+
+    /**
+     * الحصول على حالة ربط الدفتر الشهري لكل مادة
+     *
+     * @return array<int, array{status: string, mapped: int, total: int}>
+     */
+    public function getMonthlyMappingStatus(?int $gradeId, ?int $termId): array
+    {
+        return $this->settingsService->getMonthlyMappingStatus($gradeId, $termId);
     }
 
     /**

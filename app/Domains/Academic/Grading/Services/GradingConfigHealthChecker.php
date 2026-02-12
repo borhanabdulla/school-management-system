@@ -44,6 +44,9 @@ final class GradingConfigHealthChecker
             );
         }
 
+        // Preload all grading configs for the term (avoids N+1)
+        $this->resolver->preloadForTerm($term);
+
         CourseOffering::query()
             ->where('term_id', $term->id)
             ->with(['classSection'])

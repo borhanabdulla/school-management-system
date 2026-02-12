@@ -1,138 +1,186 @@
-<div class="space-y-4 bg-white dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm p-4">
+<div class="rounded-2xl border border-gray-200/60 bg-white/95 p-6 shadow-sm backdrop-blur lg:sticky lg:top-6 dark:border-slate-700/60 dark:bg-slate-900/80">
     @php
-        $isClean = empty($report['missing']) && empty($report['invalid']);
+        $checked = $report['checked'] ?? 0;
+        $missingCount = count($report['missing']);
+        $invalidCount = count($report['invalid']);
+        // $warningCount = count($report['warnings']); // Not used in score but shown?
+
+        // Calculate scores
+        $linkage = $checked > 0 ? round((($checked - $missingCount) / $checked) * 100) : ($missingCount > 0 ? 0 : 100);
+        $integrity = max(0, 100 - ($invalidCount * 5));
+        $readiness = ($missingCount == 0 && $invalidCount == 0) ? 100 : round(($linkage * 0.4) + ($integrity * 0.6));
+
+        $issues = $missingCount + $invalidCount;
+        $issuesColor = $issues > 0 ? '#f43f5e' : '#10b981';
+        $issuesPercent = min(100, $issues * 5);
     @endphp
-    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-            <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">بوابة صحة التكوينات</div>
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white">تقرير صحة SubjectGradingConfig</h3>
-            <p class="text-xs text-gray-500">نفس الـ validators التي تمنع الحساب في الباكند.</p>
-        </div>
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <select wire:model="termId" class="border rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700">
-                <option value="">اختيار الترم</option>
-                @foreach($terms as $term)
-                    <option value="{{ $term['id'] }}">{{ $term['name'] }}</option>
-                @endforeach
-            </select>
-            <button wire:click="refreshReport" wire:loading.attr="disabled"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-bold transition">
-                <span>تشغيل الفحص</span>
-                <svg wire:loading class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+
+    {{-- Header --}}
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">تشخيص الصحة</h3>
+        <div class="flex items-center gap-2">
+            <span wire:loading wire:target="refreshReport" class="flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-purple-400 opacity-75"></span>
+                <span class="relative inline-flex h-2 w-2 rounded-full bg-purple-500"></span>
+            </span>
+            <button
+                type="button"
+                wire:click="refreshReport"
+                wire:loading.class="animate-spin opacity-50"
+                class="text-gray-400 hover:text-purple-600 transition-colors dark:hover:text-purple-400"
+                title="تحديث الفحص"
+            >
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
                 </svg>
             </button>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-            <div class="text-xs text-gray-500">مفحوص</div>
-            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($report['checked']) }}</div>
-        </div>
-        <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-            <div class="text-xs text-gray-500">مفقودة</div>
-            <div class="text-2xl font-bold text-red-600">{{ count($report['missing']) }}</div>
-        </div>
-        <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-            <div class="text-xs text-gray-500">غير صالحة</div>
-            <div class="text-2xl font-bold text-amber-600">{{ count($report['invalid']) }}</div>
-        </div>
-        <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-            <div class="text-xs text-gray-500">تحذيرات</div>
-            <div class="text-2xl font-bold text-indigo-600">{{ count($report['warnings']) }}</div>
+    {{-- Main Gauge (Readiness) --}}
+    <div class="flex justify-center mb-8">
+        <div class="relative h-40 w-40">
+            {{-- Outer Glow --}}
+            <div class="absolute inset-0 rounded-full bg-emerald-400/20 blur-xl dark:bg-emerald-500/10"></div>
+            
+            {{-- Gauge Ring --}}
+            <div class="h-40 w-40 rounded-full"
+                 style="background: conic-gradient(from 0deg, #10b981 {{ $readiness }}%, #f3f4f6 {{ $readiness }}% 100%); mask-image: radial-gradient(transparent 65%, black 66%); -webkit-mask-image: radial-gradient(transparent 65%, black 66%); transform: rotate(-90deg);">
+            </div>
+            
+            {{-- Inner Content --}}
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                @if($readiness == 100)
+                    <div class="mb-1 rounded-full bg-emerald-100 p-1.5 dark:bg-emerald-900/40">
+                        <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                    </div>
+                @endif
+                <span class="text-3xl font-black text-gray-800 dark:text-white">{{ $readiness }}%</span>
+                <span class="text-[11px] font-medium text-gray-500 dark:text-slate-400">جاهزية النظام</span>
+            </div>
         </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2 text-sm">
-        <span class="font-semibold">الحالة:</span>
-        <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $isClean ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
-            {{ $statusMessage ?: ($isClean ? 'لا توجد مشاكل حرجة' : 'هناك مشاكل بحاجة حل') }}
-        </span>
+    {{-- Secondary Stats --}}
+    <div class="grid grid-cols-3 gap-2 mb-8">
+        {{-- Integrity --}}
+        <div class="flex flex-col items-center gap-2">
+            <div class="relative h-14 w-14">
+                <div class="h-14 w-14 rounded-full"
+                     style="background: conic-gradient(from 0deg, #8b5cf6 {{ $integrity }}%, #f3f4f6 {{ $integrity }}% 100%); mask-image: radial-gradient(transparent 60%, black 61%); -webkit-mask-image: radial-gradient(transparent 60%, black 61%); transform: rotate(-90deg);">
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-gray-200">
+                    {{ $integrity }}%
+                </div>
+            </div>
+            <span class="text-[10px] text-gray-500 dark:text-slate-400">سلامة البيانات</span>
+        </div>
+
+        {{-- Linkage --}}
+        <div class="flex flex-col items-center gap-2">
+            <div class="relative h-14 w-14">
+                <div class="h-14 w-14 rounded-full"
+                     style="background: conic-gradient(from 0deg, #f59e0b {{ $linkage }}%, #f3f4f6 {{ $linkage }}% 100%); mask-image: radial-gradient(transparent 60%, black 61%); -webkit-mask-image: radial-gradient(transparent 60%, black 61%); transform: rotate(-90deg);">
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-gray-200">
+                    {{ $linkage }}%
+                </div>
+            </div>
+            <span class="text-[10px] text-gray-500 dark:text-slate-400">اكتمال الربط</span>
+        </div>
+
+        {{-- Issues (Inverse) --}}
+        <div class="flex flex-col items-center gap-2">
+            <div class="relative h-14 w-14">
+                <div class="h-14 w-14 rounded-full"
+                     style="background: conic-gradient(from 0deg, {{ $issuesColor }} {{ $issuesPercent }}%, #f3f4f6 {{ $issuesPercent }}% 100%); mask-image: radial-gradient(transparent 60%, black 61%); -webkit-mask-image: radial-gradient(transparent 60%, black 61%); transform: rotate(-90deg);">
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center text-xs font-bold {{ $issues > 0 ? 'text-rose-600' : 'text-emerald-600' }}">
+                    {{ $issues }}
+                </div>
+            </div>
+            <span class="text-[10px] text-gray-500 dark:text-slate-400">أخطاء</span>
+        </div>
     </div>
 
-    @php
-        $guardRoute = route('grading.settings', ['tab' => 'subjects']);
-    @endphp
+    {{-- System Alerts List --}}
+    <div class="space-y-3">
+        <h4 class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+            </svg>
+            تنبيهات النظام
+        </h4>
 
-    <div class="space-y-4">
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <div class="text-sm font-semibold">الـ Missing</div>
-                <div class="text-xs text-gray-400">{{ count($report['missing']) }}</div>
-            </div>
-            <div class="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-3 space-y-2">
-                @if(count($report['missing']) === 0)
-                    <p class="text-xs text-gray-400">لا توجد تكوينات مفقودة.</p>
-                @else
-                    <ul class="space-y-2">
-                        @foreach($report['missing'] as $row)
-                            <li class="flex items-center justify-between text-sm">
-                                <div class="space-y-1">
-                                    <div class="font-semibold text-gray-900 dark:text-white">Subject #{{ $row['subject_id'] ?? '—' }}</div>
-                                    <div class="text-xs text-gray-500">Grade #{{ $row['grade_id'] ?? '—' }} · Offering #{{ $row['course_offering_id'] }}</div>
-                                </div>
-                                <a href="{{ $guardRoute }}"
-                                   class="text-purple-600 hover:underline text-xs font-bold">
-                                    فتح التكوين
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-        </div>
-
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <div class="text-sm font-semibold">الـ Invalid</div>
-                <div class="text-xs text-gray-400">{{ count($report['invalid']) }}</div>
-            </div>
-            <div class="rounded-xl border border-red-200 bg-red-50/60 p-3 space-y-2">
-                @if(count($report['invalid']) === 0)
-                    <p class="text-xs text-red-600">لا توجد مخالفات تمنع الحساب.</p>
-                @else
-                    <ul class="space-y-2">
-                        @foreach($report['invalid'] as $row)
-                            <li class="flex items-start justify-between gap-3 rounded-lg border border-red-100 bg-white/60 p-3">
+        <!-- Missing Items -->
+        @if($missingCount > 0)
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                    نقص في الربط ({{ $missingCount }})
+                </div>
+                <div class="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                    @foreach($report['missing'] as $row)
+                        <div class="relative overflow-hidden rounded-lg border-l-4 border-amber-500 bg-gray-50 p-3 shadow-sm dark:bg-slate-800/80">
+                            <div class="flex items-start justify-between">
                                 <div>
-                                    <div class="text-sm font-semibold text-red-700">{{ $row['violation']['message'] }}</div>
-                                    <div class="text-xs text-gray-500">Type: {{ $row['violation']['type'] }} · Subject #{{ $row['subject_id'] ?? '—' }} · Grade #{{ $row['grade_id'] ?? '—' }}</div>
+                                    <div class="text-[11px] font-bold text-amber-600 dark:text-amber-400">MISSING LINK</div>
+                                    <div class="mt-1 text-xs font-medium text-gray-800 dark:text-gray-200">
+                                        المادة غير مربوطة بأي قالب درجات.
+                                    </div>
                                 </div>
-                                <div class="flex flex-col items-end gap-1 text-xs">
-                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full uppercase">{{ $row['violation']['severity'] }}</span>
-                                    <a href="{{ $guardRoute }}" class="text-purple-600 hover:underline">راجع</a>
+                                <div class="text-[10px] font-mono text-gray-400">
+                                    Subject #{{ $row['subject_id'] ?? '?' }}
                                 </div>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
-        </div>
+        @endif
 
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <div class="text-sm font-semibold">الـ Warnings</div>
-                <div class="text-xs text-gray-400">{{ count($report['warnings']) }}</div>
-            </div>
-            <div class="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 space-y-2">
-                @if(count($report['warnings']) === 0)
-                    <p class="text-xs text-indigo-600">لا توجد تحذيرات تُستدعى.</p>
-                @else
-                    <ul class="space-y-2">
-                        @foreach($report['warnings'] as $row)
-                            <li class="flex items-center justify-between gap-3 rounded-lg border border-indigo-100 bg-white/60 p-3 text-sm">
+        <!-- Invalid Items -->
+        @if($invalidCount > 0)
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-rose-700 dark:text-rose-400">
+                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                    أخطاء حرجة ({{ $invalidCount }})
+                </div>
+                <div class="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                    @foreach($report['invalid'] as $row)
+                        <div class="relative overflow-hidden rounded-lg border-l-4 border-rose-500 bg-gray-50 p-3 shadow-sm dark:bg-slate-800/80">
+                            <div class="flex items-start justify-between">
                                 <div>
-                                    <div class="font-semibold">{{ $row['violation']['message'] }}</div>
-                                    <div class="text-xs text-gray-500">Type: {{ $row['violation']['type'] }}</div>
+                                    <div class="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase">
+                                        {{ $row['violation']['severity'] ?? 'INVALID' }}
+                                    </div>
+                                    <div class="mt-1 text-xs font-medium text-gray-800 dark:text-gray-200">
+                                        {{ $row['violation']['message'] ?? 'خطأ غير معرف' }}
+                                    </div>
                                 </div>
-                                <a href="{{ $guardRoute }}" class="text-purple-600 hover:underline text-xs">فتح</a>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+                                <div class="text-[10px] font-mono text-gray-400">
+                                    Subject #{{ $row['subject_id'] ?? '?' }}
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
-        </div>
+        @endif
+
+        @if($missingCount === 0 && $invalidCount === 0)
+            <div class="flex items-center gap-3 rounded-xl bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                <div class="text-emerald-500">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                </div>
+                <div class="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    النظام يعمل بكفاءة عالية.
+                </div>
+            </div>
+        @endif
     </div>
 </div>

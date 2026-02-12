@@ -20,9 +20,9 @@ class DeleteAcademicYearAction
                 throw new YearNotDeletableException('لا يمكن حذف سنة دراسية تم تفعيلها سابقاً (نشطة، مغلقة، أو مؤرشفة).');
             }
 
-            // التحقق من وجود طلاب
-            if ($year->students()->exists()) {
-                throw new YearNotDeletableException('لا يمكن حذف سنة تحتوي على طلاب مسجلين');
+            // التحقق من وجود تسجيلات تاريخية
+            if ($year->enrollments()->exists()) {
+                throw new YearNotDeletableException('لا يمكن حذف سنة تحتوي على تسجيلات طلاب');
             }
 
             if ($year->terms()->exists()) {

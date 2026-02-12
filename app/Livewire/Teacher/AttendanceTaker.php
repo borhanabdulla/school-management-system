@@ -4,6 +4,8 @@ namespace App\Livewire\Teacher;
 
 use App\Domains\Academic\Timetable\Models\Timetable;
 use App\Domains\Academic\Attendance\Services\AttendanceLookupService;
+use App\Domains\Academic\Attendance\Services\AttendanceSettingsService;
+use App\Domains\Academic\Attendance\Enums\AttendanceResponsibility;
 use App\Domains\Academic\Attendance\Actions\RecordStudentAttendanceAction;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -37,6 +39,34 @@ class AttendanceTaker extends Component
         $activeTermId = school()->activeTerm()?->id;
         if ($this->timetable->term_id && $activeTermId && $this->timetable->term_id != $activeTermId) {
             abort(403, __('attendance.cannot_take_attendance_non_active_term'));
+        }
+
+        $teacher = auth()->user()?->teacher;
+        if (!$teacher) {
+            abort(403, 'لا يوجد صلاحية لرصد الحضور لهذا الحساب.');
+        }
+
+        $academicYearId = $this->timetable->classSection?->academic_year_id
+            ?? $this->timetable->courseOffering?->academic_year_id
+            ?? school()->activeYearId();
+
+        if ($academicYearId) {
+            $settings = app(AttendanceSettingsService::class)->getSettings($academicYearId);
+            $role = $settings->responsible_role->value ?? AttendanceResponsibility::SubjectTeacher->value;
+
+            if ($role === AttendanceResponsibility::AdminStaff->value) {
+                abort(403, 'رصد الحضور مخصص للإداريين فقط.');
+            }
+
+            if ($role === AttendanceResponsibility::HomeroomTeacher->value
+                && $this->timetable->classSection?->homeroom_teacher_id !== $teacher->id) {
+                abort(403, 'لا تملك صلاحية رصد حضور هذه الشعبة.');
+            }
+
+            if ($role === AttendanceResponsibility::SubjectTeacher->value
+                && $this->timetable->courseOffering?->teacher_id !== $teacher->id) {
+                abort(403, 'لا تملك صلاحية رصد حضور هذه الحصة.');
+            }
         }
 
         // ✅ PR1: Check Calendar for Holidays

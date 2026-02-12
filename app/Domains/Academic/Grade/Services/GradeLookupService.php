@@ -114,18 +114,17 @@ class GradeLookupService
      * Invalidate cache for grades.
      * Call this from Actions after any write operation.
      */
-    public static function invalidateCache(?int $stageId = null): void
+    public static function invalidateCache(?int $stageId = null, ?int $yearId = null): void
     {
         Cache::forget(self::CACHE_KEY_GRADES_LIST);
         if ($stageId) {
             Cache::forget(self::CACHE_KEY_GRADES_BY_STAGE . $stageId);
         }
 
-        // Invalidate directory stats for active year (and potentially others if we knew them)
-        // Ideally, we should pass yearId to invalidate, but for now we invalidate current.
-        $yearId = \App\Infrastructure\Context\AcademicContextService::getInstance()->activeYearId();
-        if ($yearId) {
-            Cache::forget('academic_directory_stats_' . $yearId);
+        $resolvedYearId = $yearId ?? \App\Infrastructure\Context\AcademicContextService::getInstance()->activeYearId();
+        if ($resolvedYearId) {
+            Cache::forget('academic_directory_stats_' . $resolvedYearId);
+            Cache::forget('grades_by_year_' . $resolvedYearId);
         }
     }
     /**

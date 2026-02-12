@@ -8,6 +8,7 @@ use App\Domains\Academic\Grading\Data\SubjectConfigData;
 use App\Domains\Academic\Grading\Models\SubjectGradingConfig;
 use App\Domains\Academic\Grading\Models\GradingTemplate;
 use App\Domains\Academic\Grading\Exceptions\GradingException;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use App\Domains\Academic\Term\Models\Term;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,7 +29,8 @@ class SaveSubjectGradingConfigAction
     public function execute(SubjectConfigData $data): SubjectGradingConfig
     {
         $this->authorize();
-        $this->validateTemplateMatchesTerm($data);
+        $term = $this->validateTemplateMatchesTerm($data);
+        $this->assertWritable($term);
 
         // إنشاء أو تحديث التكوين
         $config = SubjectGradingConfig::updateOrCreate(
@@ -67,9 +69,10 @@ class SaveSubjectGradingConfigAction
      * 2. year-level للسنة التي ينتمي لها الترم
      * 
      * @param SubjectConfigData $data
+     * @return Term
      * @throws GradingException
      */
-    protected function validateTemplateMatchesTerm(SubjectConfigData $data): void
+    protected function validateTemplateMatchesTerm(SubjectConfigData $data): Term
     {
         $template = GradingTemplate::find($data->templateId);
 
@@ -92,14 +95,8 @@ class SaveSubjectGradingConfigAction
             throw new GradingException("الفصل الدراسي #{$data->termId} غير موجود.");
         }
 
-        // القالب term-specific ويطابق الترم المحدد - مقبول
-        if ($template->term_id === $data->termId) {
-            return;
-        }
-
-        // القالب year-level للسنة الصحيحة - مقبول
-        if ($template->term_id === null && $template->academic_year_id === $term->academic_year_id) {
-            return;
+        if ($template->matchesTerm($term)) {
+            return $term;
         }
 
         // أي حالة أخرى - مرفوض
@@ -107,5 +104,10 @@ class SaveSubjectGradingConfigAction
             "قالب التقييم المحدد لا يطابق الفصل الدراسي. " .
             "القالب للفصل #{$template->term_id} بينما التكوين للفصل #{$data->termId}"
         );
+    }
+
+    private function assertWritable(Term $term): void
+    {
+        app(AcademicWriteGuard::class)->assertWritable($term->academic_year_id, $term->id);
     }
 }

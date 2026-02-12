@@ -4,6 +4,7 @@ namespace App\Domains\Academic\AcademicYear\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus;
@@ -11,6 +12,8 @@ use App\Infrastructure\Traits\HandlesSafeDelete;
 use App\Infrastructure\Traits\HasModelLabels;
 use App\Infrastructure\Traits\InvalidatesCache;
 use App\Domains\Academic\ClassSection\Models\ClassSection;
+use App\Domains\Academic\Student\Models\Student;
+use App\Domains\Academic\Student\Models\StudentEnrollment;
 
 
 class AcademicYear extends Model
@@ -33,19 +36,10 @@ class AcademicYear extends Model
 
     /**
      * العلاقات المحمية من الحذف
-     * ملاحظة: الفصول والشعب تُحذف تلقائياً عبر DeleteAcademicYearAction
-     * فقط الطلاب يمنعون الحذف لأنهم يمثلون بيانات حقيقية لا يجب فقدانها
+     * تمنع الحذف عند وجود بيانات تاريخية مرتبطة بالسنة
      */
     protected array $protectedRelations = [
-        'students' => 'طلاب',
-    ];
-
-    /**
-     * مفاتيح الكاش المرتبطة
-     */
-    protected array $cacheKeys = [
-        'academic.years.list',
-        'academic.current_year',
+        'enrollments' => 'تسجيلات طلاب',
     ];
 
     /**
@@ -94,6 +88,23 @@ class AcademicYear extends Model
         );
     }
 
+    // علاقة: تسجيلات الطلاب التاريخية لهذه السنة
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+
+    // علاقة: الطلاب المسجلون في هذه السنة عبر enrollments (ثابتة تاريخياً)
+    public function enrolledStudents(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Student::class,
+            'student_enrollments',
+            'academic_year_id',
+            'student_id'
+        );
+    }
+
     // Scopes
     public function scopeActive($query) // تسهيل الاستعلام 
     {
@@ -112,7 +123,7 @@ class AcademicYear extends Model
 
     public function scopeWithStats($query)
     {
-        return $query->withCount(['terms', 'students']);
+        return $query->withCount(['terms', 'students', 'enrollments']);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -242,10 +253,10 @@ class AcademicYear extends Model
      */
     public function canBeDeleted(): bool
     {
-        $studentCount = $this->students_count ?? $this->students()->count();
+        $enrollmentCount = $this->enrollments_count ?? $this->enrollments()->count();
 
-        // الحذف مسموح فقط للسنة المسودة (Pending) بشرط عدم وجود طلاب
-        return $this->status === AcademicYearStatus::Pending && $studentCount === 0;
+        // الحذف مسموح فقط للسنة المسودة (Pending) بشرط عدم وجود تسجيلات
+        return $this->status === AcademicYearStatus::Pending && $enrollmentCount === 0;
     }
 
     /**

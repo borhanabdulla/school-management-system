@@ -9,6 +9,7 @@ use App\Domains\Academic\Stage\Models\EducationalStage;
 use App\Domains\Academic\ClassSection\Models\ClassSection;
 use App\Domains\Academic\Subject\Models\Subject;
 use App\Domains\Academic\Subject\Models\GradeSubject;
+use App\Domains\Academic\Student\Models\StudentEnrollment;
 
 class Grade extends Model
 {
@@ -35,6 +36,7 @@ class Grade extends Model
     protected array $protectedRelations = [
         'sections' => 'شعب دراسية',
         'subjects' => 'مواد دراسية',
+        'enrollments' => 'تسجيلات طلاب',
     ];
 
     /**
@@ -90,6 +92,11 @@ class Grade extends Model
         );
     }
 
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+
 
 
     // نستيطع من خلال هذا العلاقة جلب الشب  لسنة معينة  بدون ان نحتاج   الى استخدام العلاقة السابقة 
@@ -133,5 +140,10 @@ class Grade extends Model
         return $this->belongsToMany(Subject::class, 'grade_subjects')
             ->withPivot(['id', 'credit_hours', 'term_type', 'is_active'])// الشرط  يعني هل المادة نشطة   
             ->using(GradeSubject::class)->withTimestamps();
+    }
+
+    public function gradingTemplates(): HasMany
+    {
+        return $this->hasMany(\App\Domains\Academic\Grading\Models\GradingTemplate::class);
     }
 }

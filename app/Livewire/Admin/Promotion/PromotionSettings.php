@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Admin\Promotion;
 
-use App\Models\SystemSetting;
+use App\Domains\Academic\Grading\Models\SystemSetting;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 

@@ -59,7 +59,7 @@ class ControlDashboard extends Component
 
     public function getAcademicYearsProperty()
     {
-        return app(\App\Domains\Academic\AcademicYear\Services\AcademicYearService::class)->getAcademicYearsList();
+        return app(\App\Domains\Academic\AcademicYear\Services\AcademicYearLookupService::class)->getList();
     }
 
     public function getTermsProperty()

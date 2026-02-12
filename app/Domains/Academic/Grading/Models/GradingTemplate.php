@@ -78,4 +78,14 @@ class GradingTemplate extends Model
     {
         return $this->hasMany(SubjectGradingConfig::class);
     }
+
+    public function matchesTerm(Term $term): bool
+    {
+        if ($this->term_id === $term->id) {
+            return true;
+        }
+
+        return $this->term_id === null
+            && $this->academic_year_id === $term->academic_year_id;
+    }
 }

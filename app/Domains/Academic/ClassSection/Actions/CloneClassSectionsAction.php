@@ -5,13 +5,17 @@ namespace App\Domains\Academic\ClassSection\Actions;
 use App\Domains\Academic\AcademicYear\Models\AcademicYear;
 use App\Domains\Academic\ClassSection\Models\ClassSection;
 use App\Domains\Academic\ClassSection\Services\ClassSectionLookupService;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use App\Domains\Academic\Events\StructureChanged;
+use App\Domains\Academic\Grade\Models\Grade;
+use App\Infrastructure\Exceptions\BusinessRuleException;
 use Illuminate\Support\Facades\DB;
 
 class CloneClassSectionsAction
 {
     public function __construct(
-        protected ClassSectionLookupService $lookupService
+        protected ClassSectionLookupService $lookupService,
+        protected AcademicWriteGuard $writeGuard
     ) {
     }
 
@@ -20,11 +24,18 @@ class CloneClassSectionsAction
         $sourceYear = AcademicYear::findOrFail($sourceYearId);
         $targetYear = AcademicYear::findOrFail($targetYearId);
 
+        // Write guard applies to target year only (source is read-only).
+        $this->writeGuard->assertYearNotClosed($targetYear->id);
+
         return DB::transaction(function () use ($sourceYear, $targetYear) {
             $createdCount = 0;
             $affectedGrades = [];
 
             foreach ($sourceYear->sections as $section) {
+                if (!Grade::whereKey($section->grade_id)->exists()) {
+                    throw BusinessRuleException::make('لا يمكن نسخ شعبة لصف غير موجود.');
+                }
+
                 // Check if section already exists in target year
                 $exists = ClassSection::where('academic_year_id', $targetYear->id)
                     ->where('grade_id', $section->grade_id)

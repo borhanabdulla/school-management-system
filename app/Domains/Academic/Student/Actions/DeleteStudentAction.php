@@ -62,6 +62,46 @@ class DeleteStudentAction
             $blockers[] = 'لديه سجلات قيد دراسي (' . $student->enrollments()->count() . ' سنوات)';
         }
 
+        if ($student->seatings()->exists()) {
+            $blockers[] = 'لديه مقاعد اختبارات';
+        }
+
+        if ($student->promotions()->exists()) {
+            $blockers[] = 'لديه قرارات ترحيل';
+        }
+
+        if ($student->healthConditions()->exists()) {
+            $blockers[] = 'لديه حالات صحية مسجلة';
+        }
+
+        if ($student->previousHistories()->exists()) {
+            $blockers[] = 'لديه سجلات دراسية سابقة';
+        }
+
+        $studentMarksCount = DB::table('student_marks')
+            ->where('student_id', $student->id)
+            ->count();
+
+        if ($studentMarksCount > 0) {
+            $blockers[] = 'لديه درجات دراسية (' . $studentMarksCount . ')';
+        }
+
+        $homeworkSubmissionsCount = DB::table('homework_submissions')
+            ->where('student_id', $student->id)
+            ->count();
+
+        if ($homeworkSubmissionsCount > 0) {
+            $blockers[] = 'لديه تسليمات واجبات (' . $homeworkSubmissionsCount . ')';
+        }
+
+        $termResultsCount = DB::table('term_results')
+            ->where('student_id', $student->id)
+            ->count();
+
+        if ($termResultsCount > 0) {
+            $blockers[] = 'لديه نتائج فصلية (' . $termResultsCount . ')';
+        }
+
         return $blockers;
     }
 

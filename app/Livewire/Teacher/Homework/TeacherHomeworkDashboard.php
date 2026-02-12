@@ -16,6 +16,7 @@ class TeacherHomeworkDashboard extends Component
 
     public function mount()
     {
+        abort_unless(auth()->user()->can('teacher.homework'), 403, 'ليس لديك صلاحية لإدارة الواجبات.');
         $activeYear = school()->activeYear();
         $this->academicYearId = $activeYear?->id;
     }

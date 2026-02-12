@@ -34,7 +34,15 @@ class ClassSectionForm extends Form
         return [
             'academic_year_id' => 'required|exists:academic_years,id',
             'grade_id' => 'required|exists:grades,id',
-            'name' => 'required|string|max:50',
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('class_sections', 'name')
+                    ->where(fn($q) => $q->where('grade_id', $this->grade_id)
+                        ->where('academic_year_id', $this->academic_year_id))
+                    ->ignore($this->id),
+            ],
             'max_capacity' => 'required|integer|min:1',
             'gender_type' => ['required', Rule::enum(SectionGenderType::class)],
             'is_active' => 'boolean',

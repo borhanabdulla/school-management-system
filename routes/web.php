@@ -23,61 +23,70 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', \App\Livewire\Dashboard\MainDashboard::class)->name('dashboard');
 
     // Route::get('/academic-years', function () { return view('academic-years.index');})->name('academic-years.index');
-    Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('academic-years.index');
+    Route::get('/academic-years', [AcademicYearController::class, 'index'])
+        ->name('academic-years.index')
+        ->middleware(['can:close.year', 'sensitive.verified']);
     Route::get('/academic-years/terms/{year_id?}', [AcademicYearController::class, 'terms'])->name('terms.index');
 
     // Year Closing Wizard
     Route::get('/academic-years/{year}/close', \App\Livewire\Academic\YearClosingWizard::class)
         ->name('academic-years.close')
-        ->middleware('can:close.year');
+        ->middleware(['can:close.year', 'sensitive.verified']);
 
-    Route::get('/structure', [AcademicYearController::class, 'structure'])->name('structure.index'); // المراحل والصفوف
-    Route::get('/class-sections', [AcademicYearController::class, 'classSections'])->name('class-sections.index'); // الشعب
+    // Sensitive Access Code
+    Route::get('/security/sensitive-access', \App\Livewire\Admin\Security\SensitiveAccessManager::class)
+        ->name('security.sensitive-access')
+        ->middleware('can:sensitive.manage');
+    Route::get('/security/sensitive-verify', \App\Livewire\Admin\Security\SensitiveAccessVerify::class)
+        ->name('security.sensitive-verify');
+
+    Route::get('/structure', [AcademicYearController::class, 'structure'])->name('structure.index')->middleware('can:curriculum.manage');
+    Route::get('/class-sections', [AcademicYearController::class, 'classSections'])->name('class-sections.index')->middleware('can:classes.manage');
 
     // الدليل الأكاديمي التفاعلي
-    Route::get('/academic-directory', [AcademicDirectoryController::class, 'index'])->name('academic-directory.index');
-    Route::get('/subject-manager', [AcademicYearController::class, 'subjectManager'])->name('subject-manager.index');
+    Route::get('/academic-directory', [AcademicDirectoryController::class, 'index'])->name('academic-directory.index')->middleware('can:curriculum.manage');
+    Route::get('/subject-manager', [AcademicYearController::class, 'subjectManager'])->name('subject-manager.index')->middleware('can:curriculum.manage');
 
     // Students
-    Route::get('/students', [StudentController::class, 'index'])->name('students.index');
-    Route::get('/students/register', StudentRegistration::class)->name('students.register');
-    Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show');
-    Route::get('/student/homeworks', \App\Livewire\Student\Homework\StudentHomeworkList::class)->name('student.homeworks.index');
+    Route::get('/students', [StudentController::class, 'index'])->name('students.index')->middleware('can:students.view');
+    Route::get('/students/register', StudentRegistration::class)->name('students.register')->middleware('can:students.create');
+    Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show')->middleware('can:students.view');
+    Route::get('/student/homeworks', \App\Livewire\Student\Homework\StudentHomeworkList::class)->name('student.homeworks.index')->middleware('can:student.homework');
 
     // Teachers
-    Route::get('/teacher/dashboard', \App\Livewire\Teacher\TeacherDashboard::class)->name('teacher.dashboard');
-    Route::get('/teacher/attendance-report', \App\Livewire\Attendance\AttendanceReport::class)->name('teacher.attendance.report');
-    Route::get('/teacher/homework', \App\Livewire\Teacher\Homework\TeacherHomeworkDashboard::class)->name('teacher.homework.index');
+    Route::get('/teacher/dashboard', \App\Livewire\Teacher\TeacherDashboard::class)->name('teacher.dashboard')->middleware('can:teacher.dashboard');
+    Route::get('/teacher/attendance-report', \App\Livewire\Attendance\AttendanceReport::class)->name('teacher.attendance.report')->middleware('can:attendance.view');
+    Route::get('/teacher/homework', \App\Livewire\Teacher\Homework\TeacherHomeworkDashboard::class)->name('teacher.homework.index')->middleware('can:teacher.homework');
 
 
-    Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers.index');
-    Route::get('/teachers/create', \App\Livewire\Teacher\TeacherCreate::class)->name('teachers.create');
-    Route::get('/teachers/{id}', [TeacherController::class, 'show'])->name('teachers.show');
+    Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers.index')->middleware('can:staff.view');
+    Route::get('/teachers/create', \App\Livewire\Teacher\TeacherCreate::class)->name('teachers.create')->middleware('can:staff.create');
+    Route::get('/teachers/{id}', [TeacherController::class, 'show'])->name('teachers.show')->middleware('can:staff.view');
 
     // Guardians
-    Route::get('/guardians', \App\Livewire\Guardian\GuardianManager::class)->name('guardians.index');
-    Route::get('/guardians/create', \App\Livewire\Guardian\GuardianCreate::class)->name('guardians.create');
-    Route::get('/guardians/{id}', \App\Livewire\Guardian\GuardianShow::class)->name('guardians.show');
+    Route::get('/guardians', \App\Livewire\Guardian\GuardianManager::class)->name('guardians.index')->middleware('can:guardians.view');
+    Route::get('/guardians/create', \App\Livewire\Guardian\GuardianCreate::class)->name('guardians.create')->middleware('can:guardians.create');
+    Route::get('/guardians/{id}', \App\Livewire\Guardian\GuardianShow::class)->name('guardians.show')->middleware('can:guardians.view');
 
     // Course Assignment (Teacher Assignment to Sections)
-    Route::get('/course-assignment', \App\Livewire\Academic\CourseAssignmentIndex::class)->name('course-offerings.index');
-    Route::get('/course-assignment/{sectionId}', \App\Livewire\Academic\CourseAssignment::class)->name('course-assignment.show');
+    Route::get('/course-assignment', \App\Livewire\Academic\CourseAssignmentIndex::class)->name('course-offerings.index')->middleware('can:curriculum.manage');
+    Route::get('/course-assignment/{sectionId}', \App\Livewire\Academic\CourseAssignment::class)->name('course-assignment.show')->middleware('can:curriculum.manage');
 
     // Academic Calendar
-    Route::get('/academic/calendar', \App\Livewire\Admin\Events\EventManager::class)->name('academic.calendar');
+    Route::get('/academic/calendar', \App\Livewire\Admin\Events\EventManager::class)->name('academic.calendar')->middleware('can:curriculum.manage');
 
     // Timetable Templates (قوالب الدوام)
-    Route::get('/timetable-templates', \App\Livewire\Timetable\TimetableTemplateManager::class)->name('timetable-templates.index');
+    Route::get('/timetable-templates', \App\Livewire\Timetable\TimetableTemplateManager::class)->name('timetable-templates.index')->middleware('can:timetable.manage');
 
     // Timetable Builder
-    Route::get('/timetable', \App\Livewire\Academic\TimetableBuilder::class)->name('timetable.builder');
+    Route::get('/timetable', \App\Livewire\Academic\TimetableBuilder::class)->name('timetable.builder')->middleware('can:timetable.manage');
 
     // Attendance Settings
-    Route::get('/admin/settings/attendance', \App\Livewire\Attendance\AttendanceSettingsManager::class)->name('attendance.settings');
+    Route::get('/admin/settings/attendance', \App\Livewire\Attendance\AttendanceSettingsManager::class)->name('attendance.settings')->middleware('can:attendance.manage');
 
     // Attendance Taking
-    Route::get('/teacher/attendance/{timetableId}', \App\Livewire\Teacher\AttendanceTaker::class)->name('attendance.take');
-    Route::get('/teacher/timetable', \App\Livewire\Teacher\WeeklyTimetable::class)->name('teacher.timetable');
+    Route::get('/teacher/attendance/{timetableId}', \App\Livewire\Teacher\AttendanceTaker::class)->name('attendance.take')->middleware('can:attendance.take');
+    Route::get('/teacher/timetable', \App\Livewire\Teacher\WeeklyTimetable::class)->name('teacher.timetable')->middleware('can:teacher.timetable');
 
     // ==========================================
     // HR Module - إدارة شؤون الموظفين
@@ -132,10 +141,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
         // Teacher: Gradebooks List
-        Route::get('/gradebooks', \App\Livewire\Teacher\Grading\TeacherGradebooks::class)->name('gradebooks')->middleware('can:marks.view');
+        Route::get('/gradebooks', \App\Livewire\Teacher\Grading\TeacherGradebooks::class)->name('gradebooks')->middleware('can:grading.view_gradebook');
 
         // Teacher: Smart GradeBook
-        Route::get('/gradebook/{courseOfferingId}', \App\Livewire\Teacher\Grading\SmartGradeBook::class)->name('gradebook.show')->middleware('can:marks.view');
+        Route::get('/gradebook/{courseOfferingId}', \App\Livewire\Teacher\Grading\SmartGradeBook::class)->name('gradebook.show')->middleware('can:grading.view_gradebook');
 
         // Teacher: Homework Manager
         Route::get('/course/{courseOfferingId}/homework', \App\Livewire\Teacher\Homework\HomeworkManager::class)->name('homework.index')->middleware('can:marks.edit');
@@ -145,10 +154,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ==========================================
     // Finance Module - المالية
     // ==========================================
-    Route::prefix('finance')->name('finance.')->group(function () {
-        Route::get('/owner-dashboard', \App\Livewire\Finance\OwnerDashboard::class)->name('owner-dashboard')->middleware('can:finance.apply_discount');
-        Route::get('/invoices', \App\Livewire\Finance\InvoiceList::class)->name('invoices.index')->middleware('can:finance.apply_discount');
-        Route::get('/invoices/{invoice}', \App\Livewire\Finance\InvoiceShow::class)->name('invoices.show')->middleware('can:finance.apply_discount');
+    Route::prefix('finance')->name('finance.')->middleware('can:finance.view')->group(function () {
+        Route::get('/owner-dashboard', \App\Livewire\Finance\OwnerDashboard::class)->name('owner-dashboard');
+        Route::get('/invoices', \App\Livewire\Finance\InvoiceList::class)->name('invoices.index');
+        Route::get('/invoices/{invoice}', \App\Livewire\Finance\InvoiceShow::class)->name('invoices.show');
         Route::get('/payments/{payment}/receipt', [\App\Http\Controllers\Finance\PaymentReceiptController::class, 'show'])->name('payments.receipt');
     });
 

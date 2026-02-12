@@ -57,11 +57,6 @@ class AcademicYearService
         }
     }
 
-    public function checkIfCanBeClosed(AcademicYear $year): array
-    {
-        return app(\App\Domains\Academic\AcademicYear\Validation\AcademicYearClosureValidator::class)->validate($year);
-    }
-
     public function ensureSingleIncomingYear(Carbon $start, ?int $ignoreId = null): void
     {
         if (!$start->isFuture()) {

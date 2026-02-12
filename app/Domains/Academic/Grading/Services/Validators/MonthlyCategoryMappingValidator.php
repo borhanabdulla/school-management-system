@@ -19,6 +19,11 @@ final class MonthlyCategoryMappingValidator implements GradingConfigValidator
     private array $mappingCache = [];
 
     /**
+     * @var array<int, GradebookSettings|null>
+     */
+    private array $settingsCache = [];
+
+    /**
      * @return array<int, GradingConfigViolation>
      */
     public function validate(CourseOffering $offering, SubjectGradingConfig $config): array
@@ -30,7 +35,7 @@ final class MonthlyCategoryMappingValidator implements GradingConfigValidator
         $gradeId = $offering->classSection?->grade_id;
         $subjectId = $offering->subject_id ?? null;
 
-        if (! $academicYearId || ! $termId || ! $gradeId || ! $subjectId) {
+        if (!$academicYearId || !$termId || !$gradeId || !$subjectId) {
             return [
                 new GradingConfigViolation(
                     'MAPPING_SCOPE_INCOMPLETE',
@@ -47,8 +52,12 @@ final class MonthlyCategoryMappingValidator implements GradingConfigValidator
             ];
         }
 
-        $settings = GradebookSettings::where('academic_year_id', $academicYearId)->first();
-        if (! $settings) {
+        if (!array_key_exists($academicYearId, $this->settingsCache)) {
+            $this->settingsCache[$academicYearId] = GradebookSettings::where('academic_year_id', $academicYearId)->first();
+        }
+        $settings = $this->settingsCache[$academicYearId];
+
+        if (!$settings) {
             return [
                 new GradingConfigViolation(
                     'GRADEBOOK_SETTINGS_MISSING',
@@ -75,7 +84,7 @@ final class MonthlyCategoryMappingValidator implements GradingConfigValidator
         }
 
         $cacheKey = "{$academicYearId}_{$termId}_{$gradeId}_{$subjectId}";
-        if (! array_key_exists($cacheKey, $this->mappingCache)) {
+        if (!array_key_exists($cacheKey, $this->mappingCache)) {
             $this->mappingCache[$cacheKey] = MonthlyCategoryMapping::query()
                 ->where('academic_year_id', $academicYearId)
                 ->where('term_id', $termId)

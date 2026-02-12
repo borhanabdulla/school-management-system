@@ -183,7 +183,7 @@ class ReadinessService
     protected function checkAnnualResultsPending(AcademicYear $year): ReadinessItem
     {
         $pendingCount = AnnualResult::where('academic_year_id', $year->id)
-            ->where('decision', 'pending')
+            ->pending()
             ->count();
 
         return ReadinessItem::blocking(
@@ -214,8 +214,11 @@ class ReadinessService
             );
         }
 
+        $eligibleStudentIdsSubquery = $this->studentService->eligibleStudentIdsSubquery($year);
+
         $promotedCount = Promotion::where('academic_year_id', $year->id)
             ->where('is_reverted', false)
+            ->whereIn('student_id', $eligibleStudentIdsSubquery)
             ->count();
 
         $remaining = max(0, $eligibleCount - $promotedCount);

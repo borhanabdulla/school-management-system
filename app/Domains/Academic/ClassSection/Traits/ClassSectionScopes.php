@@ -37,13 +37,4 @@ trait ClassSectionScopes
     {
         $query->where('name', 'like', "%{$term}%");
     }
-
-    /**
-     * Scope a query to include sections with available capacity.
-     */
-    public function scopeWithAvailableCapacity(Builder $query): void
-    {
-        $query->whereColumn('current_capacity', '<', 'max_capacity');
-    }
-
 }

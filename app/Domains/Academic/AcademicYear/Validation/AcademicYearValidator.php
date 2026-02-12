@@ -2,11 +2,6 @@
 
 namespace App\Domains\Academic\AcademicYear\Validation;
 
-use App\Domains\Academic\AcademicYear\Models\AcademicYear;
-use App\Infrastructure\Support\Helpers\DateHelper;
-use App\Domains\Academic\AcademicYear\Exceptions\DateOverlapException;
-use App\Domains\Academic\AcademicYear\Exceptions\InvalidDateRangeException;
-use Carbon\Carbon;
 
 class AcademicYearValidator
 {
@@ -31,31 +26,4 @@ class AcademicYearValidator
         }
     }
 
-    /**
-     * التحقق من تداخل التواريخ
-     */
-    public function validateDateOverlap(
-        Carbon $start,
-        Carbon $end,
-        ?int $ignoreId = null
-    ): void {
-        // 1. التحقق من صحة النطاق
-        if (!DateHelper::isValidRange($start, $end)) {
-            throw new InvalidDateRangeException();
-        }
-
-        // 2. فحص التداخل
-        $overlapping = AcademicYear::where('id', '!=', $ignoreId)
-            ->get()
-            ->first(fn($year) => DateHelper::datesOverlap(
-                $start,
-                $end,
-                $year->start_date,
-                $year->end_date
-            ));
-
-        if ($overlapping) {
-            throw new DateOverlapException($overlapping->name);
-        }
-    }
 }

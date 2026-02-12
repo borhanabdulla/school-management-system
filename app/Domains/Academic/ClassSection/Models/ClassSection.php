@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Domains\Academic\Student\Models\Student;
 use App\Domains\HR\Teacher\Models\Teacher;
+use App\Domains\Academic\Attendance\Models\Attendance;
+use App\Domains\Academic\CourseOffering\Models\CourseOffering;
+use App\Domains\Academic\Promotion\Models\Promotion;
+use App\Domains\Academic\Student\Models\StudentEnrollment;
 
 class ClassSection extends Model
 {
@@ -37,6 +41,11 @@ class ClassSection extends Model
      */
     protected array $protectedRelations = [
         'students' => 'طلاب',
+        'enrollments' => 'تسجيلات طلاب',
+        'timetables' => 'جداول الحصص',
+        'attendances' => 'سجلات الحضور',
+        'courseOfferings' => 'عروض المواد',
+        'promotions' => 'قرارات الترحيل',
     ];
 
     /**
@@ -96,5 +105,25 @@ class ClassSection extends Model
     public function timetables()
     {
         return $this->hasMany(\App\Domains\Academic\Timetable\Models\Timetable::class);
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function courseOfferings(): HasMany
+    {
+        return $this->hasMany(CourseOffering::class);
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class, 'class_section_id');
+    }
+
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class, 'to_class_section_id');
     }
 }

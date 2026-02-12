@@ -21,42 +21,50 @@
     {{-- Header Section --}}
     <x-student.profile-header :student="$student" :canDelete="$canDelete" :deleteBlockers="$deleteBlockers" />
 
-    <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <x-student.stats-grid :stats="$this->stats" />
+    <!-- Main Content Grid -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left Sidebar (Sticky) -->
+            <div class="lg:col-span-4 xl:col-span-3">
+                <div class="sticky top-6 space-y-6">
+                    <x-student.profile-sidebar :student="$student" />
+                </div>
+            </div>
+
+            <!-- Right Content Area -->
+            <div class="lg:col-span-8 xl:col-span-9 space-y-6">
+                <!-- Tabs Navigation -->
+                <x-student.tabs :activeTab="$activeTab" />
+
+                <!-- Tab Content -->
+                <div class="min-h-[400px]">
+                    <!-- Profile Tab -->
+                    <div x-show="activeTab === 'profile'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                        <x-student.tab-content.profile :student="$student" />
+                    </div>
+
+                    <!-- Academic Tab -->
+                    <div x-show="activeTab === 'academic'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                        <x-student.tab-content.academic :enrollments="$student->enrollments" />
+                    </div>
+
+                    <!-- Guardians Tab -->
+                    <div x-show="activeTab === 'guardians'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                        <x-student.tab-content.guardians :guardians="$student->guardians" />
+                    </div>
+
+                    <!-- Grades Tab -->
+                    <div x-show="activeTab === 'grades'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                        <x-student.tab-content.grades 
+                            :performanceSummary="$performanceSummary"
+                            :detailedCourses="$detailedCourses"
+                            :recommendations="$recommendations"
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <!-- Tabs Navigation -->
-        <x-student.tabs :activeTab="$activeTab" />
-
-        <!-- Tab Content -->
-        <div class="pb-12">
-            <!-- Profile Tab -->
-            <div x-show="activeTab === 'profile'" x-transition.opacity>
-                <x-student.tab-content.profile :student="$student" />
-            </div>
-
-            <!-- Academic Tab -->
-            <div x-show="activeTab === 'academic'" x-transition.opacity>
-                <x-student.tab-content.academic :enrollments="$student->enrollments" />
-            </div>
-
-            <!-- Guardians Tab -->
-            <div x-show="activeTab === 'guardians'" x-transition.opacity>
-                <x-student.tab-content.guardians :guardians="$student->guardians" />
-            </div>
-
-            <!-- Grades Tab -->
-            <div x-show="activeTab === 'grades'" x-transition.opacity>
-                <x-student.tab-content.grades 
-                    :performanceSummary="$performanceSummary"
-                    :detailedCourses="$detailedCourses"
-                    :recommendations="$recommendations"
-                />
-            </div>
-        </div>
+    </div>
 
     {{-- Edit Student Modal --}}
     <x-ui.modal wire:model="showEditModal" maxWidth="2xl">

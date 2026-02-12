@@ -85,8 +85,8 @@
                                         'terminated' => 'منهي',
                                     ];
                                 @endphp
-                                <span class="px-2 py-1 rounded-full text-xs font-medium {{ $statusColors[$contract->status] ?? $statusColors['draft'] }}">
-                                    {{ $statusLabels[$contract->status] ?? $contract->status }}
+                                <span class="px-2 py-1 rounded-full text-xs font-medium {{ $statusColors[$contract->status->value] ?? $statusColors['draft'] }}">
+                                    {{ $statusLabels[$contract->status->value] ?? $contract->status->value }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">

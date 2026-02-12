@@ -31,17 +31,30 @@ class TimetableSlotValidator
     public function getSlotErrors(array $slots): array
     {
         $errors = [];
-        $slotsByDay = collect($slots)->groupBy(fn($s) => $s['day_of_week'] ?? $s->dayOfWeek ?? 0);
+        $slotsByDay = collect($slots)->groupBy(function ($s) {
+            if (is_array($s)) {
+                return $s['day_of_week'] ?? 0;
+            }
+            return $s->dayOfWeek ?? 0;
+        });
 
         foreach ($slotsByDay as $day => $daySlots) {
-            $sorted = $daySlots->sortBy(fn($s) => $s['order_index'] ?? $s->orderIndex ?? 0)->values();
+            $sorted = $daySlots->sortBy(function ($s) {
+                if (is_array($s)) {
+                    return $s['order_index'] ?? 0;
+                }
+                return $s->orderIndex ?? 0;
+            })->values();
 
             for ($i = 0; $i < count($sorted) - 1; $i++) {
                 $current = $sorted[$i];
                 $next = $sorted[$i + 1];
 
-                $currentEnd = strtotime($current['end_time'] ?? $current->endTime ?? '');
-                $nextStart = strtotime($next['start_time'] ?? $next->startTime ?? '');
+                $currentEndStr = is_array($current) ? ($current['end_time'] ?? '') : ($current->endTime ?? '');
+                $nextStartStr = is_array($next) ? ($next['start_time'] ?? '') : ($next->startTime ?? '');
+
+                $currentEnd = strtotime($currentEndStr);
+                $nextStart = strtotime($nextStartStr);
 
                 if ($currentEnd > $nextStart) {
                     $errors[] = "تداخل في اليوم {$day}: الحصة #{$i} تنتهي بعد بدء الحصة #" . ($i + 1);

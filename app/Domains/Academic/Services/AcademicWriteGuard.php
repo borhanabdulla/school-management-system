@@ -38,10 +38,10 @@ class AcademicWriteGuard
             throw ResourceNotFoundException::forModel(AcademicYear::class, $academicYearId);
         }
 
-        if ($year->status === AcademicYearStatus::Closed) {
+        if (in_array($year->status, [AcademicYearStatus::Closed, AcademicYearStatus::Archived], true)) {
             throw InvalidOperationException::cannotModify(
                 'السنة الدراسية "' . $year->name . '"',
-                'مغلقة ولا يمكن التعديل'
+                'مغلقة أو مؤرشفة ولا يمكن التعديل'
             );
         }
     }
@@ -111,8 +111,8 @@ class AcademicWriteGuard
             $term = Term::find($termId);
             $termName = $term ? $term->name : 'غير معروف';
 
-            if ($year && $year->status === AcademicYearStatus::Closed) {
-                return "لا يمكن التعديل لأن السنة الدراسية '{$yearName}' مغلقة";
+            if ($year && in_array($year->status, [AcademicYearStatus::Closed, AcademicYearStatus::Archived], true)) {
+                return "لا يمكن التعديل لأن السنة الدراسية '{$yearName}' مغلقة أو مؤرشفة";
             }
 
             if ($term && $term->status === TermStatus::Completed) {
@@ -120,8 +120,8 @@ class AcademicWriteGuard
             }
         }
 
-        if ($year && $year->status === AcademicYearStatus::Closed) {
-            return "لا يمكن التعديل لأن السنة الدراسية '{$yearName}' مغلقة";
+        if ($year && in_array($year->status, [AcademicYearStatus::Closed, AcademicYearStatus::Archived], true)) {
+            return "لا يمكن التعديل لأن السنة الدراسية '{$yearName}' مغلقة أو مؤرشفة";
         }
 
         return 'غير مسموح بالتعديل';

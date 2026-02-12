@@ -3,6 +3,7 @@
 namespace App\Domains\Academic\ClassSection\Services;
 
 use App\Domains\Academic\ClassSection\Models\ClassSection;
+use App\Domains\Academic\Grade\Services\GradeLookupService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -51,8 +52,11 @@ class ClassSectionLookupService
      */
     public function invalidateCache(int $gradeId, int $yearId): void
     {
-        $key = self::CACHE_PREFIX . "{$gradeId}:year:{$yearId}";
-        Cache::forget($key);
+        Cache::forget(self::CACHE_PREFIX . "{$gradeId}:year:{$yearId}");
+        Cache::forget("sections_grade_{$gradeId}_year_{$yearId}");
+        Cache::forget("sections_flat_list_year_{$yearId}");
+
+        GradeLookupService::invalidateCache(null, $yearId);
     }
     /**
      * Get flat list of all active sections for the current year.

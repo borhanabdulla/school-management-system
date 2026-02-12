@@ -11,7 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'sensitive.verified' => \App\Http\Middleware\EnsureSensitiveAccessVerified::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

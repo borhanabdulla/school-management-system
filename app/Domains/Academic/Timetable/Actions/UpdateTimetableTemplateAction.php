@@ -8,9 +8,11 @@ use App\Domains\Academic\Timetable\Models\TimetableTemplate;
 use App\Domains\Academic\Timetable\Data\TimetableTemplateData;
 use App\Domains\Academic\Timetable\Data\TimeSlotData;
 use App\Domains\Academic\Timetable\Validators\TimetableGradeValidator;
+use App\Domains\Academic\Timetable\Validators\TimetableSlotValidator;
 use App\Domains\Academic\Timetable\Exceptions\TemplateNotEditableException;
 use App\Domains\Academic\Timetable\Exceptions\CannotDeleteTimeSlotsInUseException;
 use App\Domains\Academic\Timetable\Events\TimetableTemplateUpdated;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -31,12 +33,15 @@ use Illuminate\Support\Facades\Log;
 class UpdateTimetableTemplateAction
 {
     public function __construct(
-        private TimetableGradeValidator $validator
+        private TimetableGradeValidator $validator,
+        private TimetableSlotValidator $slotValidator
     ) {
     }
 
     public function execute(TimetableTemplate $template, TimetableTemplateData $data): TimetableTemplate
     {
+        app(AcademicWriteGuard::class)->assertYearNotClosed($data->academicYearId);
+
         // Guard 1: Check if template is editable
         if (!$template->isEditable()) {
             throw new TemplateNotEditableException($template->id, $template->status);
@@ -44,6 +49,7 @@ class UpdateTimetableTemplateAction
 
         // Validation (separated in Validator)
         $this->validator->validateGradeAssignments($data->gradeIds, $data->academicYearId, $template->id);
+        $this->slotValidator->validateSlots($data->slots);
 
         return DB::transaction(function () use ($template, $data) {
             // Guard 2: Check if any timeSlots being deleted are used in timetables

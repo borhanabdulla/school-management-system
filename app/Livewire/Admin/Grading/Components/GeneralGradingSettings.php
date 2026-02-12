@@ -17,6 +17,7 @@ class GeneralGradingSettings extends Component
     public float $defaultPassScore = 50;
     public int $graceMarksLimit = 2;
     public array $termWeights = [];
+    public ?string $externalError = null;
 
     /**
      * Mount - تحميل الإعدادات عند التهيئة

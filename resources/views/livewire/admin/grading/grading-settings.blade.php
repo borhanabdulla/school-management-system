@@ -1,671 +1,402 @@
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
-            <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-                إعدادات نظام الدرجات
-            </span>
-        </h2>
-    </div>
-
-    <!-- Wizard Stepper -->
     @php
-        $stepsOrder = ['general', 'scale', 'templates', 'monthly', 'subjects'];
+        $stepsOrder = ['templates', 'categories', 'subjects', 'monthly', 'general', 'scale', 'review'];
+        $riskMap = [
+            'general' => 'متوسط',
+            'scale' => 'منخفض',
+            'templates' => 'مرتفع',
+            'categories' => 'مرتفع',
+            'subjects' => 'مرتفع',
+            'monthly' => 'متوسط',
+            'review' => 'منخفض',
+        ];
+        $attentionSteps = ['templates', 'categories', 'subjects', 'monthly'];
+        $hintMap = [
+            'general' => 'قواعد النجاح والأوزان العامة',
+            'scale' => 'تعريف التقديرات والنسب',
+            'templates' => 'أوزان القالب وفئاته هي سبب رئيسي لـ Invalid',
+            'categories' => 'مجموع أوزان الفئات الجذرية يجب أن يساوي 100%',
+            'subjects' => 'ربط المواد يمنع Missing عند الإغلاق',
+            'monthly' => 'ربط البنود يحدد أعمال السنة',
+            'review' => 'مراجعة نهائية قبل الإغلاق',
+        ];
+        $steps = [];
+        foreach ($stepsOrder as $key) {
+            $steps[] = [
+                'key' => $key,
+                'label' => $wizardSteps[$key]['label'] ?? $key,
+                'risk' => $riskMap[$key] ?? 'منخفض',
+                'hint' => $hintMap[$key] ?? null,
+                'state' => ($gradingHealthChecked && ! $gradingHealthIsClean && in_array($key, $attentionSteps, true)) ? 'warning' : null,
+            ];
+        }
+        $currentStep = $wizardSteps[$activeTab] ?? null;
         $activeIndex = array_search($activeTab, $stepsOrder, true);
-        $activeIndex = $activeIndex === false ? 0 : $activeIndex;
+        $prevStepKey = ($activeIndex !== false && $activeIndex > 0) ? $stepsOrder[$activeIndex - 1] : null;
+        $nextStepKey = ($activeIndex !== false && $activeIndex < count($stepsOrder) - 1) ? $stepsOrder[$activeIndex + 1] : null;
+        $prevStepLabel = $prevStepKey ? ($wizardSteps[$prevStepKey]['label'] ?? $prevStepKey) : null;
+        $nextStepLabel = $nextStepKey ? ($wizardSteps[$nextStepKey]['label'] ?? $nextStepKey) : null;
+
+        // Calculate Health Scores - Now handled by GradingHealthReport component
     @endphp
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-        <div class="flex flex-wrap gap-3">
-            @foreach($stepsOrder as $index => $key)
-                @php($step = $wizardSteps[$key] ?? ['label' => $key])
-                <button wire:click="setTab('{{ $key }}')"
-                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200
-                        {{ $activeTab === $key 
-                            ? 'bg-purple-600 text-white shadow-md' 
-                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
-                        {{ $index <= $activeIndex ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600' }}">
-                        {{ $index + 1 }}
-                    </span>
-                    <span>{{ $step['label'] ?? '' }}</span>
-                </button>
-            @endforeach
+
+    {{-- ══════════════════════════════════════════════════
+         HEADER — Title + Health Badge
+    ══════════════════════════════════════════════════ --}}
+    <div class="relative overflow-hidden rounded-3xl border border-gray-200/60 bg-gradient-to-br from-purple-50 via-white to-indigo-50/50 shadow-lg dark:border-slate-700/60 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+        {{-- Decorative blurs --}}
+        <div class="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-purple-300/20 blur-3xl dark:bg-purple-800/20"></div>
+        <div class="pointer-events-none absolute -left-16 bottom-0 h-32 w-32 rounded-full bg-indigo-300/20 blur-3xl dark:bg-indigo-800/15"></div>
+
+        <div class="relative p-6 sm:p-8">
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div class="max-w-2xl">
+                    <div class="inline-flex items-center gap-1.5 rounded-full bg-purple-100/80 px-3 py-1 text-[11px] font-semibold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                        </svg>
+                        منظومة التقدير
+                    </div>
+                    <h1 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">إعدادات الدرجات</h1>
+                    <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                        رتّب القوالب وربط المواد والدفتر الشهري بخطوات واضحة حتى تصل لنتائج سليمة.
+                    </p>
+                </div>
+
+                {{-- Health badge --}}
+                <div class="flex-shrink-0">
+                    @if(! $gradingHealthChecked)
+                        <div class="inline-flex items-center gap-2 rounded-2xl border border-slate-200/60 bg-slate-50/80 px-5 py-3 shadow-sm dark:border-slate-700/40 dark:bg-slate-900/40">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50">
+                                <svg class="h-5 w-5 text-slate-500 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-slate-700 dark:text-slate-200">لم يتم الفحص بعد</div>
+                                <div class="text-[11px] text-slate-500/80 dark:text-slate-400/70">شغّل فحص الصحة عند المراجعة</div>
+                            </div>
+                        </div>
+                    @elseif($gradingHealthIsClean)
+                        <div class="inline-flex items-center gap-2 rounded-2xl border border-emerald-200/60 bg-emerald-50/80 px-5 py-3 shadow-sm dark:border-emerald-700/40 dark:bg-emerald-900/20">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-800/40">
+                                <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-emerald-700 dark:text-emerald-300">جاهز للإغلاق</div>
+                                <div class="text-[11px] text-emerald-600/70 dark:text-emerald-400/60">كل الإعدادات سليمة</div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="inline-flex items-center gap-2 rounded-2xl border border-amber-200/60 bg-amber-50/80 px-5 py-3 shadow-sm dark:border-amber-700/40 dark:bg-amber-900/20">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-800/40">
+                                <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-amber-700 dark:text-amber-300">بحاجة مراجعة</div>
+                                <div class="text-[11px] text-amber-600/70 dark:text-amber-400/60">يوجد مشاكل تحتاج إصلاح</div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Context bar --}}
+            <div class="mt-5">
+                <x-grading.context-bar
+                    :terms="$terms"
+                    :grades="$grades"
+                    :academic-years="$academicYears"
+                    :selected-term-id="$subjectTermId"
+                    :selected-grade-id="$subjectGradeId"
+                    :missing-count="$gradingHealthMissingCount"
+                    :invalid-count="$gradingHealthInvalidCount"
+                    :is-clean="$gradingHealthIsClean"
+                    :health-checked="$gradingHealthChecked"
+                />
+            </div>
         </div>
     </div>
 
-    <!-- Step Help Overlay -->
-    @if($showStepHelp)
-        @php($step = $wizardSteps[$activeTab] ?? null)
-        @if($step)
-            <div class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 border border-white/30">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <div class="text-xs font-semibold text-purple-600">{{ $step['label'] ?? '' }}</div>
-                            <h3 class="text-xl font-bold text-gray-800 dark:text-white mt-1">{{ $step['title'] ?? '' }}</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                                {{ $step['description'] ?? '' }}
-                            </p>
-                        </div>
-                        <button wire:click="dismissStepHelp" class="text-gray-400 hover:text-gray-600">
-                            ✕
-                        </button>
-                    </div>
+    {{-- Step help modal --}}
+    <x-grading.step-help :show="$showStepHelp" :step="$currentStep" />
 
-                    @if(!empty($step['effects']))
-                        <div class="mt-4 bg-gray-50 dark:bg-gray-900/40 rounded-xl p-4">
-                            <div class="text-xs font-bold text-gray-500 mb-2">أثر هذه الخطوة</div>
-                            <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                                @foreach($step['effects'] as $effect)
-                                    <li>• {{ $effect }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
+    {{-- ══════════════════════════════════════════════════
+         MAIN LAYOUT — Stepper + Content + Sidebar
+    ══════════════════════════════════════════════════ --}}
+    <div class="grid grid-cols-12 gap-6">
+        {{-- Main content area (8 cols) --}}
+        <div class="col-span-12 space-y-5 xl:col-span-8">
+            {{-- Horizontal stepper --}}
+            <x-grading.stepper :steps="$steps" :active="$activeTab" orientation="horizontal" :interactive="false" />
+
+            {{-- Alerts (compact) --}}
+            @if($activeTab === 'review' && ($gradingHealthChecked || $gradingQueueIsStale))
+                <div class="space-y-3">
+                    @if($gradingQueueIsStale)
+                        <x-grading.queue-alert :is-stale="$gradingQueueIsStale" :last-heartbeat="$gradingQueueLastHeartbeat" />
                     @endif
-
-                    <div class="flex justify-end gap-3 mt-6">
-                        <button wire:click="dismissStepHelp"
-                                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:text-gray-800">
-                            فهمت
-                        </button>
-                        <button wire:click="dismissStepHelp"
-                                class="px-5 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700">
-                            ابدأ الخطوة
-                        </button>
-                    </div>
-                </div>
-            </div>
-        @endif
-    @endif
-
-    <!-- Content Area -->
-    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6">
-
-        @if($gradingQueueIsStale)
-            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 space-y-2 text-sm text-amber-900">
-                <div class="font-semibold text-base">
-                    تنبيه: مزامنة الدرجات متوقفة أو متأخرة
-                </div>
-                <div>
-                    آخر نبضة للـ queue:
-                    <span class="font-bold">{{ $gradingQueueLastHeartbeat ?? 'غير متوفر' }}</span>
-                </div>
-                <div>
-                    إذا استمر التنبيه، شغّل الـ queue أو استخدم إعادة التجميع من تبويب المواد.
-                </div>
-            </div>
-        @endif
-        
-        <!-- 1. Templates Tab -->
-        @if($activeTab === 'templates')
-            <div class="mb-6">
-                <livewire:admin.grading.grading-health-report :term-id="$subjectTermId" />
-            </div>
-
-            @if(! $gradingHealthIsClean)
-                <div class="mb-6 rounded-2xl border border-red-200 bg-red-50/70 p-4 space-y-3 text-sm text-red-900">
-                    <div class="font-semibold text-base">
-                        Stop report active — لا يمكن تنفيذ العمليات الحساسة (المعالجة/النشر/الإغلاق)
-                    </div>
-                    <div>
-                        يوجد مشاكل في إعدادات الدرجات:
-                        Missing: <span class="font-bold">{{ $gradingHealthMissingCount }}</span>,
-                        Invalid: <span class="font-bold">{{ $gradingHealthInvalidCount }}</span>.
-                        أصلحها ثم أعد تشغيل الفحص.
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button
-                            type="button"
-                            wire:click="$dispatch('runGradingHealthCheckRequested')"
-                            class="px-4 py-2 rounded-lg border border-white bg-white text-purple-700 font-semibold shadow-sm transition hover:bg-purple-50">
-                            تشغيل فحص الصحة الآن
-                        </button>
-                        <button
-                            type="button"
-                            wire:click="setTab('subjects')"
-                            class="px-4 py-2 rounded-lg border border-white/80 bg-purple-600 text-white font-semibold shadow-sm transition hover:bg-purple-700">
-                            فتح الإعدادات لإصلاح المشاكل
-                        </button>
-                    </div>
-                </div>
-            @endif
-            <div class="grid grid-cols-12 gap-6">
-                <!-- Sidebar: Template List -->
-                <div class="col-span-12 md:col-span-3 border-l border-gray-200 dark:border-gray-700 pl-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-gray-700 dark:text-gray-200">القوالب</h3>
-                        <button wire:click="createTemplate" class="text-purple-600 hover:text-purple-700 text-sm font-bold">+ جديد</button>
-                    </div>
-                    <div class="space-y-2">
-                        @foreach($templates as $template)
-                            <div wire:click="selectTemplate({{ $template->id }})" 
-                                 class="p-3 rounded-lg cursor-pointer transition-colors {{ $activeTemplateId === $template->id ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-500 border' : 'hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                                <div class="font-medium text-gray-800 dark:text-gray-200">{{ $template->name }}</div>
-                                <div class="text-xs text-gray-500">{{ $template->academicYear->name ?? 'عام' }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Main: Template Editor -->
-                <div class="col-span-12 md:col-span-9">
-                    @if($activeTemplateId || $activeTemplate === null)
-                        <div class="space-y-6">
-                            <!-- Template Info Form -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">اسم القالب</label>
-                                    <input type="text" wire:model="templateName" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">السنة الدراسية</label>
-                                    <select wire:model="templateAcademicYearId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
-                                        <option value="">عام (كل السنوات)</option>
-                                        @foreach($academicYears as $year)
-                                            <option value="{{ $year->id }}">{{ $year->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الفصل الدراسي</label>
-                                    <select wire:model="templateTermId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700">
-                                        <option value="">اختر الفصل</option>
-                                        @foreach($terms as $term)
-                                            <option value="{{ $term->id }}">{{ $term->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('templateTermId')
-                                        <span class="text-xs text-red-600">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                                <div class="flex items-end">
-                                    <button wire:click="saveTemplate"
-                                            class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition">
-                                        حفظ القالب
-                                    </button>
-                                </div>
-                            </div>
-
-                            @if($activeTemplateId)
-                                <hr class="border-gray-200 dark:border-gray-700">
-                                
-                                <!-- Tree Builder -->
-                                <div>
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h3 class="font-bold text-lg text-gray-800 dark:text-white">هيكلية الدرجات</h3>
-                                        <button wire:click="openCategoryForm" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm">
-                                            + إضافة فئة رئيسية
-                                        </button>
-                                    </div>
-
-                                    <!-- Tree Visualization -->
-                                    <div class="space-y-3">
-                                        @foreach($activeTemplate->categories as $category)
-                                            <x-grading-tree-item :category="$category" :level="0" />
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    @else
-                        <div class="text-center py-12 text-gray-500">
-                            اختر قالباً للتعديل أو أنشئ قالباً جديداً
-                        </div>
+                    @if($gradingHealthChecked && ! $gradingHealthIsClean)
+                        <x-grading.health-warning :is-clean="$gradingHealthIsClean" :missing="$gradingHealthMissingCount" :invalid="$gradingHealthInvalidCount" />
                     @endif
-                </div>
-            </div>
-        @endif
-
-        {{-- 2. Grade Scale Tab --}}
-        @if($activeTab === 'scale')
-            <livewire:admin.grading.components.grade-scale-manager />
-        @endif
-
-        {{-- 3. General Settings Tab --}}
-        @if($activeTab === 'general')
-            <livewire:admin.grading.components.general-grading-settings />
-        @endif
-
-        <!-- 4. Subjects Tab -->
-        @if($activeTab === 'subjects')
-        <div class="space-y-6">
-            <!-- Filters -->
-            <div class="flex gap-4 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl">
-                    <div class="w-1/3">
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">الصف الدراسي</label>
-                        <select wire:model.live="subjectGradeId" class="w-full rounded-lg border-gray-300 dark:bg-gray-700">
-                            @foreach($grades as $grade)
-                                <option value="{{ $grade->id }}">{{ $grade->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="w-1/3">
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">الفصل الدراسي</label>
-                        <select wire:model.live="subjectTermId" class="w-full rounded-lg border-gray-300 dark:bg-gray-700">
-                            @foreach($terms as $term)
-                                <option value="{{ $term->id }}">{{ $term->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-            </div>
-
-            @if(! $gradingHealthIsClean)
-                <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 space-y-1">
-                    <div class="font-semibold">موقوف: يوجد Missing أو Invalid config.</div>
-                    <div class="text-xs text-red-600">
-                        أصلح {{ $gradingHealthMissingCount }} Missing و{{ $gradingHealthInvalidCount }} Invalid من التقرير ثم أعد الفحص.
-                    </div>
                 </div>
             @endif
 
-            <!-- Subjects Table -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
-                            <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المادة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">القالب المخصص</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                            @forelse($subjects as $subject)
-                                <tr>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                        {{ $subject->name }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <select wire:model="subjectConfigs.{{ $subject->id }}" class="w-full rounded border-gray-300 dark:bg-gray-700 text-sm">
-                                            <option value="">-- اختر قالباً --</option>
-                                            @foreach($templates as $t)
-                                                <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <button wire:click="saveSubjectConfig({{ $subject->id }})"
-                                                data-guard="subject-save"
-                                                class="text-purple-600 hover:text-purple-800 font-medium text-sm transition">
-                                            حفظ
-                                        </button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="px-6 py-4 text-center text-gray-500">لا توجد مواد لهذا الصف</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @endif
+            {{-- Tab content card --}}
+            <div class="overflow-hidden rounded-2xl border border-gray-200/60 bg-white/95 p-6 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/80">
+                <!-- 1. Templates Tab -->
+                @if($activeTab === 'templates')
+                    <x-grading.templates-tab
+                        :templates="$templates"
+                        :active-template-id="$activeTemplateId"
+                        :active-template="$activeTemplate"
+                        :template-name="$templateName"
+                        :template-academic-year-id="$templateAcademicYearId"
+                        :template-grade-id="$templateGradeId"
+                        :template-term-id="$templateTermId"
+                        :academic-years="$academicYears"
+                        :terms="$terms"
+                        :apply-template-to-all-terms="$applyTemplateToAllTerms"
+                        :apply-template-to-subjects="$applyTemplateToSubjects"
+                        :show-template-form="true"
+                        :show-apply-options="true"
+                        :show-category-tree="false"
+                        :show-guide="false"
+                        :show-template-create="true"
+                        help-title="ابدأ بإنشاء القالب"
+                        help-message="أنشئ القالب وحدد الترم، ثم انتقل إلى خطوة الفئات لضبط الأوزان."
+                    />
+                @endif
 
-        @if($showMonthlyMappingModal)
-            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click.self="closeMonthlyMapping">
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-5xl mx-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">
-                            مابينغ الدفتر الشهري — {{ $mappingSubjectName ?: 'المادة' }}
-                        </h3>
-                        <button wire:click="closeMonthlyMapping" class="text-gray-400 hover:text-gray-600">
-                            ✕
-                        </button>
+                @if($activeTab === 'categories')
+                    <x-grading.templates-tab
+                        :templates="$templates"
+                        :active-template-id="$activeTemplateId"
+                        :active-template="$activeTemplate"
+                        :template-name="$templateName"
+                        :template-academic-year-id="$templateAcademicYearId"
+                        :template-grade-id="$templateGradeId"
+                        :template-term-id="$templateTermId"
+                        :academic-years="$academicYears"
+                        :terms="$terms"
+                        :apply-template-to-all-terms="$applyTemplateToAllTerms"
+                        :apply-template-to-subjects="$applyTemplateToSubjects"
+                        :show-template-form="false"
+                        :show-apply-options="false"
+                        :show-category-tree="true"
+                        :show-guide="true"
+                        :show-template-create="false"
+                        help-title="ماذا يجب إنجازه هنا؟"
+                        help-message="أضف الفئات الجذرية واضبط أوزانها حتى يصبح المجموع 100%، ثم أضف الفروع عند الحاجة."
+                    />
+                @endif
+
+                {{-- 2. Grade Scale Tab --}}
+                @if($activeTab === 'scale')
+                    <x-grading.help-hint
+                        title="معلومة"
+                        message="تغيير سلم التقديرات يؤثر على عرض النتائج ولا يغيّر الدرجات الخام."
+                        variant="info"
+                    />
+                    <div class="mt-4">
+                        <livewire:admin.grading.components.grade-scale-manager
+                            :external-error="$errors->first('gradeScale')"
+                        />
                     </div>
+                @endif
 
-                    @if(empty($mappingCategories))
-                        <div class="text-sm text-gray-500">لا توجد بنود شهرية للعرض.</div>
-                    @elseif(empty($mappingTemplateCategories))
-                        <div class="text-sm text-gray-500">لا توجد فئات قالب متاحة لهذه المادة.</div>
-                    @else
-                        <div class="overflow-auto max-h-[60vh] border border-gray-200 dark:border-gray-700 rounded-xl">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                                <thead class="bg-gray-50 dark:bg-gray-900">
-                                    <tr>
-                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500">البند</th>
-                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500">فئة القالب</th>
-                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500">قاعدة التجميع</th>
-                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500">سياسة الأشهر الناقصة</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                                    @foreach($mappingCategories as $category)
-                                        @php($key = $category['key'] ?? '')
-                                        <tr>
-                                            <td class="px-4 py-2 text-gray-700 dark:text-gray-200">
-                                                {{ $category['label'] ?? '' }}
-                                                <div class="text-[10px] text-gray-400">{{ $key }}</div>
-                                            </td>
-                                            <td class="px-4 py-2">
-                                                <select wire:model="monthlyCategoryMappings.{{ $key }}.template_category_id"
-                                                        class="w-full rounded border-gray-300 dark:bg-gray-700 text-xs">
-                                                    <option value="">-- اختر فئة --</option>
-                                                    @foreach($mappingTemplateCategories as $option)
-                                                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td class="px-4 py-2">
-                                                <select wire:model="monthlyCategoryMappings.{{ $key }}.aggregation_rule"
-                                                        class="w-full rounded border-gray-300 dark:bg-gray-700 text-xs">
-                                                    @foreach($aggregationRuleOptions as $value => $label)
-                                                        <option value="{{ $value }}">{{ $label }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td class="px-4 py-2">
-                                                <select wire:model="monthlyCategoryMappings.{{ $key }}.missing_months_policy"
-                                                        class="w-full rounded border-gray-300 dark:bg-gray-700 text-xs">
-                                                    @foreach($missingMonthsPolicyOptions as $value => $label)
-                                                        <option value="{{ $value }}">{{ $label }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                {{-- 3. General Settings Tab --}}
+                @if($activeTab === 'general')
+                    <x-grading.help-hint
+                        title="تنبيه"
+                        message="اجعل مجموع أوزان الفصول = 100% لتجنّب منع الإغلاق."
+                        variant="warning"
+                    />
+                    <div class="mt-4">
+                        <livewire:admin.grading.components.general-grading-settings
+                            :external-error="$errors->first('generalSettings')"
+                        />
+                    </div>
+                @endif
 
-                        <div class="flex justify-end gap-3 mt-4">
-                            <button wire:click="closeMonthlyMapping"
-                                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:text-gray-800">
-                                إلغاء
-                            </button>
-                            <button wire:click="saveMonthlyMappings"
-                                    class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-                                حفظ المابينغ
-                            </button>
-                        </div>
+                <!-- 4. Subjects Tab -->
+                @if($activeTab === 'subjects')
+                    <x-grading.subjects-tab
+                        :subjects="$subjects"
+                        :grades="$grades"
+                        :terms="$terms"
+                        :templates="$templates"
+                        :subject-grade-id="$subjectGradeId"
+                        :subject-term-id="$subjectTermId"
+                        :subject-configs="$subjectConfigs"
+                        :subject-search="$subjectSearch"
+                        :bulk-template-id="$bulkTemplateId"
+                        :grading-health-is-clean="$gradingHealthIsClean"
+                        :grading-health-missing-count="$gradingHealthMissingCount"
+                        :grading-health-invalid-count="$gradingHealthInvalidCount"
+                    />
+                @endif
+
+                <!-- 5. Monthly Gradebook Tab -->
+                @if($activeTab === 'monthly')
+                    <x-grading.monthly-tab
+                        :monthly-categories="$monthlyCategories"
+                        :attendance-deduct-after="$attendanceDeductAfter"
+                        :attendance-deduct-per-absence="$attendanceDeductPerAbsence"
+                        :attendance-max-score="$attendanceMaxScore"
+                        :allow-custom-categories="$allowCustomCategories"
+                        :grades="$grades"
+                        :terms="$terms"
+                        :subject-grade-id="$subjectGradeId"
+                        :subject-term-id="$subjectTermId"
+                        :monthly-mapping-summary="$monthlyMappingSummary"
+                        :monthly-mapping-status="$monthlyMappingStatus"
+                        :subjects="$subjects"
+                    />
+                @endif
+
+                @if($activeTab === 'review')
+                    <x-grading.review-tab
+                        :is-clean="$gradingHealthIsClean"
+                        :missing="$gradingHealthMissingCount"
+                        :invalid="$gradingHealthInvalidCount"
+                        :terms="$terms"
+                        :grades="$grades"
+                        :selected-term-id="$subjectTermId"
+                        :selected-grade-id="$subjectGradeId"
+                    />
+                @endif
+            </div>
+
+            {{-- Navigation buttons --}}
+            <div class="flex items-center justify-between rounded-2xl border border-gray-200/60 bg-white/95 px-5 py-3.5 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/80">
+                <button
+                    type="button"
+                    wire:click="goPreviousStep"
+                    @disabled(! $prevStepKey)
+                    class="group inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-300
+                        {{ $prevStepKey
+                            ? 'border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800/60'
+                            : 'cursor-not-allowed border-gray-100 text-gray-300 dark:border-slate-800 dark:text-slate-600'
+                        }}"
+                >
+                    <svg class="h-4 w-4 transition-transform duration-300 {{ $prevStepKey ? 'group-hover:translate-x-1' : '' }}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+                    <span>السابق</span>
+                    @if($prevStepLabel)
+                        <span class="hidden text-[11px] font-normal text-gray-400 sm:inline">({{ $prevStepLabel }})</span>
                     @endif
+                </button>
+
+                <div class="hidden items-center gap-1.5 text-xs font-medium text-gray-400 dark:text-slate-500 sm:flex">
+                    @foreach($stepsOrder as $i => $s)
+                        <span class="h-1.5 w-1.5 rounded-full {{ $i == $activeIndex ? 'bg-purple-500 w-4' : ($i < $activeIndex ? 'bg-emerald-400' : 'bg-gray-200 dark:bg-slate-700') }} transition-all duration-300"></span>
+                    @endforeach
                 </div>
+
+                <button
+                    type="button"
+                    wire:click="goNextStep"
+                    @disabled(! $nextStepKey)
+                    class="group inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300
+                        {{ $nextStepKey
+                            ? 'bg-gradient-to-l from-purple-600 to-purple-700 text-white shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 hover:-translate-y-0.5'
+                            : 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-slate-800 dark:text-slate-600'
+                        }}"
+                >
+                    @if($nextStepLabel)
+                        <span class="hidden text-[11px] font-normal text-white/70 sm:inline">({{ $nextStepLabel }})</span>
+                    @endif
+                    <span>التالي</span>
+                    <svg class="h-4 w-4 rotate-180 transition-transform duration-300 {{ $nextStepKey ? 'group-hover:-translate-x-1' : '' }}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+                </button>
             </div>
-        @endif
+        </div>
 
-        <!-- 5. Monthly Gradebook Tab -->
-        @if($activeTab === 'monthly')
-            <div class="space-y-8" wire:init="loadMonthlySettings">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-800 dark:text-white">إعدادات الدفتر الشهري (النمط الورقي)</h3>
-                    <button wire:click="saveMonthlySettings"
-                            class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg transition">
-                        حفظ الإعدادات
-                    </button>
-                </div>
+        {{-- Sidebar (4 cols) --}}
+        <div class="col-span-12 space-y-5 xl:col-span-4">
+            {{-- Health panel --}}
+            @if($activeTab === 'review')
+                <livewire:admin.grading.grading-health-report :term-id="$subjectTermId" wire:key="health-report-{{ $subjectTermId }}" />
+            @endif
 
-                <div class="bg-white/70 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm backdrop-blur">
-                    <div class="text-xs font-bold text-purple-600 mb-1">الخطوة 1</div>
-                    <div class="text-base font-bold text-gray-800 dark:text-white">تعريف بنود الدفتر وقواعد المواظبة</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                        هذه البنود تمثل أعمدة دفتر المعلم الشهري، ومنها يتم تجميع أعمال السنة لاحقًا.
-                    </p>
-                </div>
-
-                <!-- Categories -->
-                <div class="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                        <h4 class="font-bold text-gray-700 dark:text-gray-300">بنود التقييم الشهرية</h4>
-                        <button wire:click="addMonthlyCategory" class="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg">
-                            + إضافة بند
-                        </button>
-                    </div>
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
-                            <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم البند</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الدرجة العظمى</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">مرتبط بالحضور؟</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">حذف</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                            @foreach($monthlyCategories as $index => $cat)
-                                <tr>
-                                    <td class="px-6 py-4">
-                                        <input type="text" wire:model="monthlyCategories.{{ $index }}.label" class="w-full rounded border-gray-300 dark:bg-gray-700" placeholder="مثلاً: واجبات">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <input type="number" wire:model="monthlyCategories.{{ $index }}.max_score" class="w-24 rounded border-gray-300 dark:bg-gray-700 text-center">
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <input type="checkbox" wire:model="monthlyCategories.{{ $index }}.is_attendance" class="rounded border-gray-300 text-purple-600 w-5 h-5">
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <button wire:click="removeMonthlyCategory({{ $index }})" class="text-red-500 hover:text-red-700">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Attendance Rules -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-gray-50 dark:bg-gray-700/30 p-6 rounded-xl space-y-4">
-                        <h4 class="font-bold text-gray-800 dark:text-white border-b pb-2">قواعد خصم المواظبة</h4>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">يبدأ الخصم بعد غياب (أيام)</label>
-                            <input type="number" wire:model="attendanceDeductAfter" class="w-full rounded-lg border-gray-300 dark:bg-gray-700">
+            {{-- Step focus card --}}
+            @if($currentStep)
+                <div class="rounded-2xl border border-gray-200/60 bg-white/95 p-5 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/80">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/40">
+                            <svg class="h-4 w-4 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 3.75H6A2.25 2.25 0 0 0 3.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0 1 20.25 6v1.5m0 9V18A2.25 2.25 0 0 1 18 20.25h-1.5m-9 0H6A2.25 2.25 0 0 1 3.75 18v-1.5" />
+                            </svg>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مقدار الخصم لكل يوم غياب</label>
-                            <input type="number" step="0.5" wire:model="attendanceDeductPerAbsence" class="w-full rounded-lg border-gray-300 dark:bg-gray-700">
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 dark:bg-gray-700/30 p-6 rounded-xl space-y-4">
-                        <h4 class="font-bold text-gray-800 dark:text-white border-b pb-2">إعدادات إضافية</h4>
-                        <label class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50">
-                            <input type="checkbox" wire:model="allowCustomCategories" class="rounded border-gray-300 text-purple-600 w-5 h-5">
-                            <div>
-                                <div class="font-bold text-gray-800 dark:text-gray-200">السماح للمعلمين بإضافة بنود خاصة</div>
-                                <div class="text-xs text-gray-500">يمكن للمعلم إضافة أعمدة إضافية (مثل: مشروع، نشاط) لدفتره الخاص</div>
+                            <div class="text-[11px] font-semibold text-gray-400 dark:text-slate-500">تركيز الخطوة</div>
+                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100">
+                                {{ $currentStep['title'] ?? $currentStep['label'] }}
                             </div>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="bg-white/70 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm backdrop-blur">
-                    <div class="text-xs font-bold text-purple-600 mb-1">الخطوة 2</div>
-                    <div class="text-base font-bold text-gray-800 dark:text-white">ربط بنود الدفتر بفئات التقييم</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                        هذا الربط يحدد أي بند شهري يتجمع داخل أي فئة من القالب (أعمال سنة/نهائي).
-                        بدونه تظهر مشاكل Missing/Invalid ولن تعمل عمليات التجميع بشكل صحيح.
-                    </p>
-                </div>
-
-                <div class="space-y-4">
-                    <div class="flex gap-4 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl">
-                        <div class="w-1/3">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">الصف الدراسي</label>
-                            <select wire:model.live="subjectGradeId" class="w-full rounded-lg border-gray-300 dark:bg-gray-700">
-                                @foreach($grades as $grade)
-                                    <option value="{{ $grade->id }}">{{ $grade->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="w-1/3">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">الفصل الدراسي</label>
-                            <select wire:model.live="subjectTermId" class="w-full rounded-lg border-gray-300 dark:bg-gray-700">
-                                @foreach($terms as $term)
-                                    <option value="{{ $term->id }}">{{ $term->name }}</option>
-                                @endforeach
-                            </select>
                         </div>
                     </div>
 
-                    @if(! $subjectTermId)
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                            اختر الفصل الدراسي أولاً لعرض المواد وربط البنود.
-                        </div>
-                    @else
-                        <div class="flex flex-wrap items-center gap-3 text-xs">
-                            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
-                                مكتمل {{ $monthlyMappingSummary['complete'] ?? 0 }}
-                            </span>
-                            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-semibold">
-                                ناقص {{ $monthlyMappingSummary['partial'] ?? 0 }}
-                            </span>
-                            <span class="px-3 py-1 rounded-full bg-red-100 text-red-800 font-semibold">
-                                غير مرتبط {{ $monthlyMappingSummary['missing'] ?? 0 }}
-                            </span>
-                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-semibold">
-                                بنود غير معرفة {{ $monthlyMappingSummary['no_categories'] ?? 0 }}
-                            </span>
-                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-semibold">
-                                غير متاح {{ $monthlyMappingSummary['unavailable'] ?? 0 }}
-                            </span>
-                        </div>
+                    @if(! empty($currentStep['description']))
+                        <p class="mt-3 text-[13px] leading-relaxed text-gray-600 dark:text-slate-300">
+                            {{ $currentStep['description'] }}
+                        </p>
+                    @endif
 
-                        <div class="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
-                                    <tr>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المادة</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">حالة الربط</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                    @forelse($subjects as $subject)
-                                        @php($status = $monthlyMappingStatus[$subject->id] ?? null)
-                                        <tr>
-                                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                                {{ $subject->name }}
-                                            </td>
-                                            <td class="px-6 py-4 text-sm">
-                                                @if(! $status)
-                                                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">
-                                                        غير متاح
-                                                    </span>
-                                                @elseif($status['status'] === 'complete')
-                                                    <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">
-                                                        مكتمل ({{ $status['mapped'] }}/{{ $status['total'] }})
-                                                    </span>
-                                                @elseif($status['status'] === 'partial')
-                                                    <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
-                                                        ناقص ({{ $status['mapped'] }}/{{ $status['total'] }})
-                                                    </span>
-                                                @elseif($status['status'] === 'missing')
-                                                    <span class="px-2 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold">
-                                                        غير مرتبط
-                                                    </span>
-                                                @else
-                                                    <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">
-                                                        بنود غير معرفة
-                                                    </span>
-                                                @endif
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <button wire:click="openMonthlyMapping({{ $subject->id }})"
-                                                        class="text-blue-600 hover:text-blue-800 font-medium text-sm transition">
-                                                    ربط بنود الدفتر بفئات التقييم
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="2" class="px-6 py-4 text-center text-gray-500">لا توجد مواد لهذا الصف</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                    @if(! empty($currentStep['requirements']))
+                        <div class="mt-4 space-y-1.5">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">ما المطلوب؟</div>
+                            @foreach($currentStep['requirements'] as $requirement)
+                                <div class="flex items-start gap-2 rounded-lg bg-gray-50/80 px-3 py-2 dark:bg-slate-800/40">
+                                    <svg class="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75" />
+                                    </svg>
+                                    <span class="text-xs text-gray-600 dark:text-slate-300">{{ $requirement }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if(! empty($currentStep['effects']))
+                        <div class="mt-4 space-y-1.5">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">ماذا ستؤثر؟</div>
+                            @foreach($currentStep['effects'] as $effect)
+                                <div class="flex items-start gap-2 rounded-lg bg-gray-50/80 px-3 py-2 dark:bg-slate-800/40">
+                                    <svg class="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-purple-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                    <span class="text-xs text-gray-600 dark:text-slate-300">{{ $effect }}</span>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 
-    <!-- Category Modal -->
-    <x-dialog-modal wire:model="showCategoryForm">
-        <x-slot name="title">
-            {{ $editingCategoryId ? 'تعديل الفئة' : 'إضافة فئة جديدة' }}
-        </x-slot>
+    {{-- Modals --}}
+    <x-grading.monthly-mapping-modal
+        :show="$showMonthlyMappingModal"
+        :mapping-subject-name="$mappingSubjectName"
+        :mapping-categories="$mappingCategories"
+        :mapping-template-categories="$mappingTemplateCategories"
+        :aggregation-rule-options="$aggregationRuleOptions"
+        :missing-months-policy-options="$missingMonthsPolicyOptions"
+    />
 
-        <x-slot name="content">
-            <div class="grid grid-cols-1 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">اسم الفئة</label>
-                    <input type="text" wire:model="categoryName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">الوزن النسبي</label>
-                        <input type="number" step="0.01" wire:model="categoryWeight" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">الدرجة العظمى (الخام)</label>
-                        <input type="number" step="0.01" wire:model="categoryMaxRawScore" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700">
-                        <span class="text-xs text-gray-500">اختياري، للمعلم</span>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">نوع الحساب</label>
-                    <select wire:model="categoryCalculationType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700">
-                        <option value="sum">مجموع (Sum)</option>
-                        <option value="average">متوسط (Average)</option>
-                        <option value="weighted_average">متوسط مرجح (Weighted Avg)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">نوع الفئة (Mapping)</label>
-                    <select wire:model="categoryMappingType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700">
-                        <option value="manual">يدوي (Manual)</option>
-                        <option value="monthly_average">متوسط شهري (مهمل)</option>
-                        <option value="attendance">حضور</option>
-                        <option value="homework">واجبات</option>
-                        <option value="final_exam">اختبار نهائي</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="flex items-center gap-2 mt-2">
-                        <input type="checkbox" wire:model="categoryPassRequired" class="rounded border-gray-300 text-purple-600 shadow-sm">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">يتطلب نجاح</span>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">حد النجاح</label>
-                        <input type="number" step="0.01" wire:model="categoryPassThreshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700" @if(!$categoryPassRequired) disabled @endif>
-                    </div>
-                </div>
-                <div class="flex gap-4 mt-2">
-                    <label class="flex items-center">
-                        <input type="checkbox" wire:model="categoryIsDynamic" class="rounded border-gray-300 text-purple-600 shadow-sm">
-                        <span class="mr-2 text-sm text-gray-600 dark:text-gray-400">وزن ديناميكي (تلقائي)</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" wire:model="categoryIsLocked" class="rounded border-gray-300 text-purple-600 shadow-sm">
-                        <span class="mr-2 text-sm text-gray-600 dark:text-gray-400">قفل الأوزان (منع المعلم)</span>
-                    </label>
-                </div>
-                <div class="flex gap-4 mt-2">
-                    <label class="flex items-center">
-                        <input type="checkbox" wire:model="categoryIsReadonly" class="rounded border-gray-300 text-purple-600 shadow-sm">
-                        <span class="mr-2 text-sm text-gray-600 dark:text-gray-400">للقراءة فقط</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" wire:model="categoryIsFinalExam" class="rounded border-gray-300 text-purple-600 shadow-sm">
-                        <span class="mr-2 text-sm text-gray-600 dark:text-gray-400">اختبار نهائي</span>
-                    </label>
-                </div>
-            </div>
-        </x-slot>
-
-        <x-slot name="footer">
-            <x-secondary-button wire:click="$set('showCategoryForm', false)"
-                                wire:loading.attr="disabled">
-                إلغاء
-            </x-secondary-button>
-
-            <x-button class="mr-3 bg-purple-600 hover:bg-purple-700"
-                      wire:click="saveCategory"
-                      wire:loading.attr="disabled">
-                حفظ
-            </x-button>
-        </x-slot>
-    </x-dialog-modal>
+    <x-grading.category-modal
+        :editing-category-id="$editingCategoryId"
+        :category-pass-required="$categoryPassRequired"
+        :category-calculation-type="$categoryCalculationType"
+        :category-mapping-type="$categoryMappingType"
+    />
 </div>

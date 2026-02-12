@@ -225,16 +225,16 @@ class AnnualResultService
             $totalScore = (($t1?->total_score ?? 0) * ($weight1 / 100))
                 + (($t2?->total_score ?? 0) * ($weight2 / 100));
 
+            if ($totalScore >= $passScore) {
+                continue;
+            }
+
             if ($this->isTermFailed($t1, $gradeId, $subjectId, $term1->id)) {
                 $termFailures[] = $this->buildTermFailurePayload($t1, $term1);
             }
 
             if ($this->isTermFailed($t2, $gradeId, $subjectId, $term2->id)) {
                 $termFailures[] = $this->buildTermFailurePayload($t2, $term2);
-            }
-
-            if ($termFailures === []) {
-                continue;
             }
 
             $failedSubjects[] = [

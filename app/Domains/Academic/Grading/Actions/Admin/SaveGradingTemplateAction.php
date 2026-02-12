@@ -9,6 +9,7 @@ use App\Domains\Academic\Grading\Models\GradingTemplate;
 use App\Domains\Academic\Grading\Services\GradingLookupService;
 use App\Domains\Academic\Grading\Exceptions\GradingException;
 use App\Domains\Academic\Term\Models\Term;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -34,7 +35,8 @@ class SaveGradingTemplateAction
     public function execute(?int $templateId, TemplateData $data): GradingTemplate
     {
         $this->authorize();
-        $this->validateTermYearConsistency($data);
+        $term = $this->validateTermYearConsistency($data);
+        $this->assertWritable($data, $term);
 
         if ($templateId) {
             // تحديث قالب موجود
@@ -81,13 +83,14 @@ class SaveGradingTemplateAction
      * Invariant: إذا كان termId موجوداً، يجب أن ينتمي للـ academicYearId
      * 
      * @param TemplateData $data
+     * @return Term|null
      * @throws GradingException
      */
-    protected function validateTermYearConsistency(TemplateData $data): void
+    protected function validateTermYearConsistency(TemplateData $data): ?Term
     {
         // إذا لم يكن هناك termId، فهو قالب على مستوى السنة (year-level) - مقبول
         if (!$data->termId) {
-            return;
+            return null;
         }
 
         // التحقق من أن الترم ينتمي للسنة الدراسية المحددة
@@ -102,6 +105,20 @@ class SaveGradingTemplateAction
                 "الفصل الدراسي المحدد (#{$data->termId}) لا ينتمي للسنة الدراسية المحددة (#{$data->academicYearId}). " .
                 "الفصل ينتمي للسنة #{$term->academic_year_id}"
             );
+        }
+
+        return $term;
+    }
+
+    private function assertWritable(TemplateData $data, ?Term $term): void
+    {
+        if ($term) {
+            app(AcademicWriteGuard::class)->assertWritable($term->academic_year_id, $term->id);
+            return;
+        }
+
+        if ($data->academicYearId) {
+            app(AcademicWriteGuard::class)->assertYearNotClosed($data->academicYearId);
         }
     }
 }

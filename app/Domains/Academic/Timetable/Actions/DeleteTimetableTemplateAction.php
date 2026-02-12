@@ -10,6 +10,7 @@ use App\Domains\Academic\Timetable\Exceptions\TemplateNotEditableException;
 use App\Domains\Academic\Timetable\Exceptions\CannotDeleteTimetableWithAttendanceException;
 use App\Domains\Academic\Timetable\Enums\TemplateStatus;
 use App\Domains\Academic\Timetable\Actions\DeleteTimetableEntryAction;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -31,6 +32,8 @@ class DeleteTimetableTemplateAction
 {
     public function execute(TimetableTemplate $template): void
     {
+        app(AcademicWriteGuard::class)->assertYearNotClosed($template->academic_year_id);
+
         if ($template->status === TemplateStatus::Active) {
             throw new TemplateNotEditableException(
                 $template->id,
@@ -48,9 +51,7 @@ class DeleteTimetableTemplateAction
                 $this->guardAgainstTimetableWithAttendance($slotIds->toArray());
 
                 // ✅ PR-2: Delete linked Timetable entries using centralized action
-                $timetablesToDelete = Timetable::whereIn('time_slot_id', $slotIds)
-                    ->where('term_id', $template->term_id) // ✅ PR-2: Add term scope
-                    ->get();
+                $timetablesToDelete = Timetable::whereIn('time_slot_id', $slotIds)->get();
 
                 foreach ($timetablesToDelete as $timetable) {
                     app(DeleteTimetableEntryAction::class)->execute($timetable->id);

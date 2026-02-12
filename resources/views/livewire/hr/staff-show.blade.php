@@ -66,7 +66,9 @@
                         'financial' => ['label' => 'البيانات المالية', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
                         'access' => ['label' => 'الصلاحيات', 'icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'],
                     ] as $key => $tab)
-                        <button type="button" @click.prevent="activeTab = '{{ $key }}'"
+                        <button type="button" 
+                            x-on:click.prevent="activeTab = '{{ $key }}'"
+                            wire:key="tab-{{ $key }}"
                             :class="activeTab === '{{ $key }}' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300'"
                             class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors">
                             <svg :class="activeTab === '{{ $key }}' ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 group-hover:text-gray-500'"
@@ -264,17 +266,20 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @forelse($staff->attendances as $attendance)
+                            @forelse($staff->staffAttendances as $attendance)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                         {{ $attendance->date->format('Y-m-d') }}
                                         <span class="text-gray-400 text-xs mr-1">({{ $attendance->date->translatedFormat('l') }})</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
+                                        @php
+                                            $statusLabels = ['present' => 'حاضر', 'absent' => 'غائب', 'late' => 'متأخر', 'on_leave' => 'إجازة'];
+                                        @endphp
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            {{ $attendance->status === 'present' ? 'bg-green-100 text-green-800' : 
-                                               ($attendance->status === 'absent' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
-                                            {{ $attendance->status }}
+                                            {{ $attendance->status === 'present' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
+                                               ($attendance->status === 'absent' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400') }}">
+                                            {{ $statusLabels[$attendance->status] ?? $attendance->status }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -320,8 +325,7 @@
                             </div>
                         </div>
                         <div class="mt-4 w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
-                            @php $percentage = $balance->total_days > 0 ? ($balance->remaining_days / $balance->total_days) * 100 : 0; @endphp
-                            <div class="bg-blue-500 h-1.5 rounded-full" style="width: {{ $percentage }}%"></div>
+                            <div class="bg-blue-500 h-1.5 rounded-full" style="width: {{ $balance->total_days > 0 ? ($balance->remaining_days / $balance->total_days) * 100 : 0 }}%"></div>
                         </div>
                         <p class="mt-2 text-xs text-gray-400">من أصل {{ $balance->total_days }} يوم</p>
                     </div>
@@ -333,10 +337,41 @@
                 <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">طلبات الإجازة الأخيرة</h3>
                 </div>
-                {{-- Placeholder for requests list --}}
-                <div class="p-8 text-center text-gray-500 dark:text-gray-400">
-                    لا توجد طلبات إجازة حديثة
-                </div>
+                @if($staff->leaveRequests && $staff->leaveRequests->count() > 0)
+                    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                        @foreach($staff->leaveRequests->take(10) as $request)
+                            <div class="px-6 py-4 flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div>
+                                        <p class="font-medium text-gray-900 dark:text-white text-sm">{{ $request->leaveType?->name ?? 'غير محدد' }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $request->start_date?->format('Y-m-d') }} → {{ $request->end_date?->format('Y-m-d') }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ $request->days_count ?? '-' }} يوم</span>
+                                    @php
+                                        $reqStatusColors = [
+                                            'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+                                            'approved' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                                            'rejected' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                                        ];
+                                        $reqStatusLabels = ['pending' => 'قيد الانتظار', 'approved' => 'موافق عليها', 'rejected' => 'مرفوضة'];
+                                    @endphp
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold {{ $reqStatusColors[$request->status] ?? 'bg-gray-100 text-gray-600' }}">
+                                        {{ $reqStatusLabels[$request->status] ?? $request->status }}
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="p-8 text-center">
+                        <svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">لا توجد طلبات إجازة حديثة</p>
+                    </div>
+                @endif
             </div>
         </div>
 

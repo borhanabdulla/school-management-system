@@ -46,6 +46,12 @@ class AssignStudentToClassAction
         // 🛡️ PR-1: Guard against closed year
         app(AcademicWriteGuard::class)->assertYearNotClosed($currentYear->id);
 
+        if ((int) $section->academic_year_id !== (int) $currentYear->id) {
+            throw ValidationException::withMessages([
+                'section' => 'لا يمكن تعيين الطالب لشعبة من سنة دراسية مختلفة.'
+            ]);
+        }
+
         // 2. Get or create enrollment for this year
         // We assume the student might already have an enrollment (e.g. created during registration without section)
         $enrollmentType = $student->enrollments()->exists() ? 'returning' : 'new';

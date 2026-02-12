@@ -7,7 +7,7 @@ use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
 use App\Domains\Academic\Student\Models\Guardian;
-use App\Domains\Academic\ClassSection\Models\ClassSection;
+use App\Domains\Academic\ClassSection\Services\ClassSectionLookupService;
 use App\Domains\Academic\Student\Actions\RegisterStudentAction;
 use App\Livewire\Forms\Student\StudentRegistrationForm;
 use App\Domains\Academic\Student\Data\StudentRegistrationData;
@@ -71,16 +71,25 @@ class StudentRegistration extends Component
         $guardians = [];
         if (strlen($this->searchQuery) > 2) {
             $guardians = Guardian::query()
-                ->where('national_id', 'like', $this->searchQuery . '%')
-                ->orWhere('phone', 'like', '%' . $this->searchQuery . '%')
-                ->orWhere('first_name', 'like', '%' . $this->searchQuery . '%')
-                ->orWhere('last_name', 'like', '%' . $this->searchQuery . '%')
+                ->where(function ($q) {
+                    $q->where('national_id', 'like', $this->searchQuery . '%')
+                        ->orWhere('phone', 'like', '%' . $this->searchQuery . '%')
+                        ->orWhere('first_name', 'like', '%' . $this->searchQuery . '%')
+                        ->orWhere('last_name', 'like', '%' . $this->searchQuery . '%');
+                })
                 ->orderBy('first_name')
                 ->limit(5)
                 ->get();
         }
 
-        $sections = $this->form->grade_id ? ClassSection::where('grade_id', $this->form->grade_id)->get() : [];
+        $sections = [];
+        if ($this->form->grade_id) {
+            $activeYear = school()->activeYear();
+            if ($activeYear) {
+                $sections = app(ClassSectionLookupService::class)
+                    ->getSections((int) $this->form->grade_id, $activeYear->id);
+            }
+        }
 
         return view('livewire.student.student-registration', [
             'guardians' => $guardians,
@@ -363,27 +372,12 @@ class StudentRegistration extends Component
                     'completion_year' => $this->form->completion_year,
                     'last_gpa' => $this->form->last_gpa,
                     'reason_for_transfer' => $this->form->reason_for_transfer,
-                ]
+                ],
+                $this->create_invoice && $this->final_total > 0
             );
 
             // Execute Action
             $student = $action->execute($data);
-
-            // Create Invoice if requested
-            if ($this->create_invoice && $this->final_total > 0) {
-                $academicYear = school()->activeYear();
-
-                if ($academicYear) {
-                    app(\App\Domains\Finance\Actions\CreateInvoiceAction::class)->execute(
-                        \App\Domains\Finance\Data\InvoiceData::fromArray([
-                            'student_id' => $student->id,
-                            'academic_year_id' => $academicYear->id,
-                            'grade_id' => $this->form->grade_id,
-                            'generate_items' => true,
-                        ])
-                    );
-                }
-            }
 
             $this->dispatch('notify', message: 'تم تسجيل الطالب بنجاح!');
             return redirect()->route('students.show', $student->id);
@@ -396,7 +390,7 @@ class StudentRegistration extends Component
             $this->addError('date_of_birth', $e->getMessage());
             $this->currentStep = 1;
 
-        } catch (\App\Exceptions\ClassroomFullException $e) {
+        } catch (\App\Domains\Academic\ClassSection\Exceptions\ClassroomFullException $e) {
             $this->addError('class_section_id', $e->getMessage());
             $this->currentStep = 3;
 

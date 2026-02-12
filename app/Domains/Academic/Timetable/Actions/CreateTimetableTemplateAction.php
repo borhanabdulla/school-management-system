@@ -8,7 +8,9 @@ use App\Domains\Academic\Timetable\Models\TimetableTemplate;
 use App\Domains\Academic\Timetable\Data\TimetableTemplateData;
 use App\Domains\Academic\Timetable\Data\TimeSlotData;
 use App\Domains\Academic\Timetable\Validators\TimetableGradeValidator;
+use App\Domains\Academic\Timetable\Validators\TimetableSlotValidator;
 use App\Domains\Academic\Timetable\Events\TimetableTemplateCreated;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -21,14 +23,18 @@ use Illuminate\Support\Facades\Log;
 class CreateTimetableTemplateAction
 {
     public function __construct(
-        private TimetableGradeValidator $validator
+        private TimetableGradeValidator $validator,
+        private TimetableSlotValidator $slotValidator
     ) {
     }
 
     public function execute(TimetableTemplateData $data): TimetableTemplate
     {
+        app(AcademicWriteGuard::class)->assertYearNotClosed($data->academicYearId);
+
         // التحقق (مفصول في Validator)
         $this->validator->validateGradeAssignments($data->gradeIds, $data->academicYearId);
+        $this->slotValidator->validateSlots($data->slots);
 
         return DB::transaction(function () use ($data) {
             // إنشاء القالب
@@ -75,4 +81,3 @@ class CreateTimetableTemplateAction
         });
     }
 }
-

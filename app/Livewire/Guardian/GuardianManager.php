@@ -11,6 +11,11 @@ class GuardianManager extends Component
 {
     use WithPagination;
 
+    public function boot()
+    {
+        abort_unless(auth()->user()->can('guardians.view'), 403, 'ليس لديك صلاحية عرض أولياء الأمور.');
+    }
+
     public $search = '';
 
     #[Layout('layouts.app')]

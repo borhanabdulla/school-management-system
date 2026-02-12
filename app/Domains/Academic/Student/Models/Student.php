@@ -45,6 +45,11 @@ class Student extends Model
         'invoices' => 'فواتير',
         'attendances' => 'سجلات حضور',
         'annualResults' => 'نتائج سنوية',
+        'enrollments' => 'تسجيلات',
+        'seatings' => 'مقاعد اختبارات',
+        'promotions' => 'قرارات ترحيل',
+        'healthConditions' => 'حالات صحية',
+        'previousHistories' => 'سجلات سابقة',
     ];
 
     /**

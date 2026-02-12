@@ -41,6 +41,13 @@ class TeacherScheduleWidget extends Component
             return;
         }
 
+        $activeYearId = school()->activeYearId();
+        $activeTermId = school()->activeTerm()?->id;
+        if (!$activeYearId || !$activeTermId) {
+            $this->timetables = [];
+            return;
+        }
+
         $dayOfWeek = now()->dayOfWeek;
         $today = now()->format('Y-m-d');
         $query = Timetable::query();
@@ -56,6 +63,14 @@ class TeacherScheduleWidget extends Component
             $query->whereHas('courseOffering', function ($q) use ($teacher) {
                 $q->where('teacher_id', $teacher->id);
             });
+        }
+        $query->where('term_id', $activeTermId);
+
+        // 1.1 فلترة بالسنة النشطة
+        if ($this->responsibleRole === 'class_teacher') {
+            $query->whereHas('classSection', fn($q) => $q->where('academic_year_id', $activeYearId));
+        } else {
+            $query->whereHas('courseOffering', fn($q) => $q->where('academic_year_id', $activeYearId));
         }
 
         // 2. فلترة اليوم

@@ -45,7 +45,7 @@ class AcademicYearClosureValidator
 
         // 2. جميع النتائج السنوية محسوبة (لا يوجد pending)
         $pendingResults = AnnualResult::where('academic_year_id', $year->id)
-            ->where('decision', 'pending')
+            ->pending()
             ->count();
 
         if ($pendingResults > 0) {

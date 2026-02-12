@@ -7,6 +7,7 @@ namespace App\Domains\Academic\Grading\Actions\Admin;
 use App\Domains\Academic\Grading\Data\MonthlySettingsData;
 use App\Domains\Academic\Grading\Models\GradebookSettings;
 use App\Domains\Academic\AcademicYear\Models\AcademicYear;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use App\Domains\Academic\Grading\Exceptions\GradingException;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,6 +30,7 @@ class SaveGradebookSettingsAction
     {
         $this->authorize();
         $this->validateYearExists($academicYearId);
+        app(AcademicWriteGuard::class)->assertYearNotClosed($academicYearId);
 
         // جلب أو إنشاء إعدادات للسنة المحددة
         $settings = GradebookSettings::firstOrCreate(

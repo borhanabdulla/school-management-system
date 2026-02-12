@@ -41,6 +41,7 @@ class GuardianShow extends Component
 
     public function mount($id)
     {
+        abort_unless(auth()->user()->can('guardians.view'), 403, 'ليس لديك صلاحية عرض بيانات أولياء الأمور.');
         // ⚡ Performance Optimization: Eager load relationships to avoid N+1 queries
         $this->guardian = $this->guardianLookup()->findForShow($id);
     }

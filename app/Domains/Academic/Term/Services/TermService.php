@@ -5,11 +5,11 @@ namespace App\Domains\Academic\Term\Services;
 use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\Term\Enums\TermStatus;
 use App\Domains\Academic\AcademicYear\Models\AcademicYear;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use App\Infrastructure\Exceptions\BusinessRuleException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 
 class TermService
 {
@@ -25,8 +25,13 @@ class TermService
      */
     public function createTerm(array $data): Term
     {
+        app(AcademicWriteGuard::class)->assertYearNotClosed((int) $data['academic_year_id']);
+
         if (($data['status'] ?? null) === TermStatus::Active->value) {
             throw BusinessRuleException::make('تفعيل الفصل يجب أن يتم عبر ActivateTermAction.');
+        }
+        if (($data['status'] ?? null) === TermStatus::Completed->value) {
+            throw BusinessRuleException::make('لا يمكن إنشاء فصل مكتمل يدوياً.');
         }
 
         return DB::transaction(function () use ($data) {
@@ -49,8 +54,13 @@ class TermService
      */
     public function updateTerm(Term $term, array $data): Term
     {
+        app(AcademicWriteGuard::class)->assertYearNotClosed($term->academic_year_id);
+
         if (($data['status'] ?? null) === TermStatus::Active->value) {
             throw BusinessRuleException::make('تفعيل الفصل يجب أن يتم عبر ActivateTermAction.');
+        }
+        if (($data['status'] ?? null) === TermStatus::Completed->value) {
+            throw BusinessRuleException::make('لا يمكن تحويل الفصل إلى مكتمل يدوياً.');
         }
 
         return DB::transaction(function () use ($term, $data) {
@@ -59,6 +69,10 @@ class TermService
             $fullData['academic_year_id'] = $term->academic_year_id;
 
             // التحقق من التواريخ
+            if ($term->status === TermStatus::Completed && (isset($data['start_date']) || isset($data['end_date']))) {
+                throw BusinessRuleException::make('لا يمكن تعديل تواريخ فصل مكتمل.');
+            }
+
             if (isset($data['start_date']) || isset($data['end_date'])) {
                 $this->validateTermDates($fullData, $term->id);
             }
@@ -79,6 +93,12 @@ class TermService
      */
     protected function validateTermDates(array $data, $ignoreTermId = null): void
     {
+        if (empty($data['start_date']) || empty($data['end_date'])) {
+            throw ValidationException::withMessages([
+                'start_date' => 'تواريخ الفصل مطلوبة بالكامل.',
+            ]);
+        }
+
         $year = AcademicYear::findOrFail($data['academic_year_id']);
 
         $termStart = Carbon::parse($data['start_date']);
@@ -124,16 +144,10 @@ class TermService
         }
 
         // 2. التحقيق في التبعيات
-        $dependencies = [];
-        if (method_exists($term, 'timetables') && $term->timetables()->exists())
-            $dependencies[] = "جداول حصص";
-        if (method_exists($term, 'grades') && $term->grades()->exists())
-            $dependencies[] = "درجات مرصودة";
-        if (method_exists($term, 'attendances') && $term->attendances()->exists())
-            $dependencies[] = "سجلات حضور";
+        $blockers = $term->getDeletionBlockers();
 
-        if (!empty($dependencies)) {
-            $reason = implode(' و ', $dependencies);
+        if (!empty($blockers)) {
+            $reason = implode(' و ', $blockers);
             throw ValidationException::withMessages([
                 'error' => "لا يمكن حذف هذا الفصل لأنه يحتوي على: ($reason). قم بأرشفته بدلاً من ذلك."
             ]);

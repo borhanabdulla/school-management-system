@@ -6,6 +6,7 @@ namespace App\Domains\Academic\Timetable\Actions;
 
 use App\Domains\Academic\Timetable\Models\TimetableTemplate;
 use App\Domains\Academic\Timetable\Enums\TemplateStatus;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -16,6 +17,8 @@ class DuplicateTimetableTemplateAction
 {
     public function execute(TimetableTemplate $template, string $newName): TimetableTemplate
     {
+        app(AcademicWriteGuard::class)->assertYearNotClosed($template->academic_year_id);
+
         return DB::transaction(function () use ($template, $newName) {
             // نسخ القالب
             $newTemplate = $template->replicate();

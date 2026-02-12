@@ -32,6 +32,7 @@ use App\Domains\Academic\Student\Exceptions\MissingGuardianException;
 use App\Domains\Academic\Student\Exceptions\NoActiveAcademicYearException;
 use App\Domains\Academic\Student\Services\StudentPlacementSyncService;
 use Illuminate\Validation\ValidationException;
+use App\Domains\Academic\Services\AcademicWriteGuard;
 
 class RegisterStudentAction
 {
@@ -39,7 +40,8 @@ class RegisterStudentAction
         protected CreateInvoiceAction $createInvoiceAction,
         protected AssignStudentToClassAction $assignStudentToClassAction,
         protected StudentPlacementSyncService $placementSyncService,
-        protected AdmissionNumberService $admissionNumberService
+        protected AdmissionNumberService $admissionNumberService,
+        protected AcademicWriteGuard $writeGuard
     ) {
     }
 
@@ -67,10 +69,13 @@ class RegisterStudentAction
                 ->first();
 
             $activeYearId = $activeYear->id;
+            $this->writeGuard->assertYearNotClosed($activeYear->id);
             $this->validateData($data);
 
             // 1. Create Student Record (temporary admission number)
             $student = $this->createStudent($data);// يعمل على إنشاء طالب جديد  
+
+            $this->processProfilePhoto($student, $data->photo ?? null);
 
             $admissionNumber = $this->admissionNumberService->generateFor($student);
             $student->updateQuietly(['admission_number' => $admissionNumber]);
@@ -160,9 +165,19 @@ class RegisterStudentAction
             'national_id' => $data->student['national_id'] ?? null,
             'blood_type' => $data->student['blood_type'] ?? null,
             'current_grade_id' => $data->grade_id,
-            'current_class_section_id' => $data->class_section_id,
+            'current_class_section_id' => null,
             'status' => StudentStatus::Active->value,
         ]);
+    }
+
+    protected function processProfilePhoto(Student $student, $photo): void
+    {
+        if (!$photo) {
+            return;
+        }
+
+        $path = $photo->store('students/photos', 'public');
+        $student->updateQuietly(['profile_photo_path' => $path]);
     }
 
     protected function processGuardians(Student $student, array $guardiansData): void

@@ -18,10 +18,11 @@ class StaffShow extends Component
     public function mount(Staff $staff): void
     {
         $this->staff = $staff->load([
-            'user',
+            'user.roles',
             'teacher',
             'workShift',
             'leaveBalances.leaveType',
+            'leaveRequests' => fn($q) => $q->with('leaveType')->latest()->take(10),
             'contracts' => fn($q) => $q->with('contractItems')->latest(),
             'payrollRecords.batch',
             'loans.installments',

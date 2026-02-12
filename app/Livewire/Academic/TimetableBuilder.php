@@ -14,7 +14,7 @@ use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\Timetable\Models\Timetable;
 use App\Domains\Academic\Timetable\Models\TimetableTemplate;
 use App\Domains\Academic\Timetable\Models\TimeSlot;
-use App\Domains\Academic\Timetable\Exceptions\CannotDeleteTimetableWithAttendanceException;
+use App\Domains\Academic\Timetable\Actions\DeleteTimetableEntryAction;
 use App\Infrastructure\Context\AcademicContextService;
 use App\Domains\Academic\Term\Services\TermLookupService;
 use App\Domains\Academic\AcademicYear\Services\AcademicYearService;
@@ -415,6 +415,11 @@ class TimetableBuilder extends Component
             return;
         }
 
+        if (!$this->selectedTermId) {
+            $this->dispatch('error', message: 'يرجى اختيار فصل دراسي قبل حفظ الحصة.');
+            return;
+        }
+
         // ✅ PR0 Backend Guard: Prevent modification of non-active terms
         $activeTermId = app(AcademicContextService::class)->activeTerm()?->id;
         if ($this->selectedTermId && $activeTermId && $this->selectedTermId != $activeTermId) {
@@ -474,47 +479,27 @@ class TimetableBuilder extends Component
             return;
         }
 
+        if (!$this->selectedTermId) {
+            $this->dispatch('error', message: 'يرجى اختيار فصل دراسي قبل حذف الحصة.');
+            return;
+        }
+
         // ✅ PR0 Backend Guard
         $activeTermId = app(AcademicContextService::class)->activeTerm()?->id;
         if ($this->selectedTermId && $activeTermId && $this->selectedTermId != $activeTermId) {
             abort(403, 'Modification of non-active terms is restricted.');
         }
 
-        // Guard: Check for attendance records before deletion
-        $this->guardAgainstDeletingTimetableWithAttendance($slotId);
-
-        Timetable::where('class_section_id', $this->selectedSectionId)
-            ->where('time_slot_id', $slotId)
-            ->where('term_id', $this->selectedTermId)
-            ->delete();
-
-        $this->dispatch('notify', message: 'تم حذف الحصة', type: 'success');
-    }
-
-    /**
-     * Guard against deleting timetable entries with attendance records
-     *
-     * @throws CannotDeleteTimetableWithAttendanceException
-     */
-    private function guardAgainstDeletingTimetableWithAttendance(int $slotId): void
-    {
-        $timetableEntries = Timetable::where('class_section_id', $this->selectedSectionId)
+        $timetables = Timetable::where('class_section_id', $this->selectedSectionId)
             ->where('time_slot_id', $slotId)
             ->where('term_id', $this->selectedTermId)
             ->get();
 
-        foreach ($timetableEntries as $entry) {
-            $attendanceCount = DB::table('attendances')
-                ->where('timetable_id', $entry->id)
-                ->count();
-
-            if ($attendanceCount > 0) {
-                throw new CannotDeleteTimetableWithAttendanceException(
-                    $entry->id,
-                    $attendanceCount
-                );
-            }
+        foreach ($timetables as $timetable) {
+            app(DeleteTimetableEntryAction::class)->execute($timetable->id);
         }
+
+        $this->dispatch('notify', message: 'تم حذف الحصة', type: 'success');
     }
 
     public function render()

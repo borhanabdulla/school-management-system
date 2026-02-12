@@ -21,6 +21,7 @@ class StudentRegistrationForm extends Form
     public $nationality_id = '';
     public $blood_type = '';
     public $national_id = '';
+    public $photo = null;
 
     // Step 2: Temporary Guardian Info
     public $guardian_first_name = '';
@@ -60,6 +61,7 @@ class StudentRegistrationForm extends Form
             'nationality_id' => 'nullable|exists:countries,id',
             'blood_type' => 'nullable|string|max:3',
             'national_id' => 'nullable|unique:students,national_id|max:20',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
             // Step 2: Guardian Info (يجب تعريفها هنا لمنع الخطأ، حتى لو كانت nullable)
             // جعلناها nullable لأن التحقق الصارم يتم عند الضغط على زر "إضافة ولي أمر"
@@ -119,6 +121,9 @@ class StudentRegistrationForm extends Form
 
             'national_id.unique' => 'الرقم القومي هذا مسجل بالفعل لطالب آخر.',
             'national_id.max' => 'الرقم القومي يجب ألا يتجاوز 20 رقماً.',
+            'photo.image' => 'ملف الصورة يجب أن يكون صورة.',
+            'photo.mimes' => 'الصورة يجب أن تكون بصيغة JPG أو JPEG أو PNG.',
+            'photo.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت.',
 
             // Step 2: Guardian Info
             'guardian_first_name.required' => 'يرجى إدخال الاسم الأول لولي الأمر.',
@@ -283,6 +288,7 @@ class StudentRegistrationForm extends Form
                 'nationality_id' => $rules['nationality_id'],
                 'blood_type' => $rules['blood_type'],
                 'national_id' => $rules['national_id'],
+                'photo' => $rules['photo'],
             ];
         } elseif ($step == 2) {
             $stepRules = [

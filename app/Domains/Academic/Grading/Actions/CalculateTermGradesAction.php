@@ -14,6 +14,7 @@ use App\Domains\Academic\Results\Models\TermResult;
 use App\Domains\Academic\Results\Services\FinalExamScoreResolver;
 use App\Domains\Academic\Results\Services\TermResultFailureRecorder;
 use App\Domains\Academic\Student\Models\Student;
+use App\Domains\Academic\Student\Models\StudentEnrollment;
 use App\Domains\Academic\Student\Models\StudentMark;
 use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\Grading\Services\GradingCalculatorService;
@@ -50,7 +51,18 @@ class CalculateTermGradesAction
         app(AcademicWriteGuard::class)->assertTermNotCompleted($term->id);
         $this->healthGate->assertTermHealthy($term, 'حساب نتائج الترم');
         
-        $students = $classSection->students()->active()->get();
+        $studentIds = StudentEnrollment::query()
+            ->where('academic_year_id', $term->academic_year_id)
+            ->where('class_section_id', $classSection->id)
+            ->pluck('student_id')
+            ->unique();
+
+        $students = $studentIds->isEmpty()
+            ? collect()
+            : Student::query()
+                ->whereIn('id', $studentIds)
+                ->active()
+                ->get();
         $courseOfferings = CourseOffering::where('class_section_id', $classSection->id)
             ->where('term_id', $term->id)
             ->with(['subject', 'classSection'])

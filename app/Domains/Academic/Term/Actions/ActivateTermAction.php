@@ -34,7 +34,7 @@ class ActivateTermAction
                 throw BusinessRuleException::make('لا يمكن تفعيل فصل مكتمل. لإعادة فتحه يلزم إجراء إداري منفصل.');
             }
 
-            // 3. Handle Term Transition (Close current active term)
+            // 3. Handle Term Transition (complete current active term)
             $activeTerms = Term::query()
                 ->where('academic_year_id', $activeYear->id)
                 ->where('status', TermStatus::Active)

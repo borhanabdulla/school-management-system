@@ -55,8 +55,8 @@ class TimeSlotData extends BaseData
             dayOfWeek: $slot->day_of_week,
             label: $slot->label,
             orderIndex: $slot->order_index,
-            startTime: $slot->start_time?->format('H:i') ?? '00:00',
-            endTime: $slot->end_time?->format('H:i') ?? '00:00',
+            startTime: is_string($slot->start_time) ? $slot->start_time : ($slot->start_time?->format('H:i') ?? '00:00'),
+            endTime: is_string($slot->end_time) ? $slot->end_time : ($slot->end_time?->format('H:i') ?? '00:00'),
             type: $slot->type ?? TimeSlotType::Academic,
             isAttendanceCheckpoint: $slot->is_attendance_checkpoint ?? false,
         );

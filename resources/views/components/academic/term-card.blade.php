@@ -2,8 +2,7 @@
 
 @php
     // تحديد حالة الترم وتنسيقه
-    $isCompleted = $term->status === \App\Domains\Academic\Term\Enums\TermStatus::Completed
-        || ($term->end_date && now()->gt($term->end_date));
+    $isCompleted = $term->status === \App\Domains\Academic\Term\Enums\TermStatus::Completed;
     $isActive = $term->status === \App\Domains\Academic\Term\Enums\TermStatus::Active;
     $isPending = $term->status === \App\Domains\Academic\Term\Enums\TermStatus::Pending;
     $isFuture = !$isCompleted && !$isActive;
@@ -82,7 +81,7 @@
                         </button>
                         @if ($isPending && $term->academicYear->status === \App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus::Active)
                             <button wire:click="activateTerm({{ $term->id }})"
-                                wire:confirm="تفعيل هذا الفصل؟ سيتم إغلاق الفصول الأخرى." @click="open = false"
+                                wire:confirm="تفعيل هذا الفصل؟ سيتم إكمال الفصل النشط الحالي تلقائياً." @click="open = false"
                                 class="flex w-full items-center px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
                                 تفعيل
                             </button>

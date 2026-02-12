@@ -26,7 +26,13 @@ class GradeForm extends Form
     {
         return [
             'educational_stage_id' => 'required|exists:educational_stages,id',
-            'name' => 'required|string',
+            'name' => [
+                'required',
+                'string',
+                Rule::unique('grades', 'name')
+                    ->where(fn($q) => $q->where('educational_stage_id', $this->educational_stage_id))
+                    ->ignore($this->id),
+            ],
             'level_order' => 'required|integer|min:1',
             'next_grade_id' => ['nullable', 'exists:grades,id', function ($attr, $val, $fail) {
                 if ($val == $this->id) $fail('لا يمكن اختيار الصف نفسه كصف تالي.');

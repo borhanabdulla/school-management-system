@@ -2,69 +2,90 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     @forelse ($guardians as $guardian)
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all">
-            <div class="flex items-start justify-between mb-4">
-                <div class="flex items-center">
-                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xl ml-3">
-                        {{ mb_substr($guardian->first_name, 0, 1) }}
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-                            {{ $guardian->first_name }} {{ $guardian->last_name }}
-                        </h3>
-                        <span class="text-sm text-indigo-500 dark:text-indigo-400 font-medium bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-md">
-                            {{ $guardian->pivot->relationship }}
-                        </span>
+        <div class="group relative bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-lg hover:border-purple-200 dark:hover:border-purple-900/50 transition-all duration-300">
+            <!-- Decorative Background -->
+            <div class="absolute top-0 left-0 right-0 h-24 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-700/50 dark:to-slate-700/30"></div>
+            
+            <div class="relative p-6">
+                <div class="flex items-start justify-between">
+                    <!-- Avatar & Info -->
+                    <div class="flex items-end gap-4 mt-2">
+                        <div class="relative">
+                            <div class="w-20 h-20 rounded-2xl bg-white dark:bg-slate-800 p-1 shadow-sm ring-1 ring-gray-100 dark:ring-slate-700">
+                                <div class="w-full h-full rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold text-3xl">
+                                    {{ mb_substr($guardian->first_name, 0, 1) }}
+                                </div>
+                            </div>
+                            @if ($guardian->pivot->is_financial_sponsor)
+                                <div class="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-full ring-2 ring-white dark:ring-slate-800 shadow-sm" title="المسؤول المالي">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        <div class="mb-2">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                                {{ $guardian->first_name }} {{ $guardian->last_name }}
+                            </h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                                    {{ $guardian->pivot->relationship }}
+                                </span>
+                                @if($guardian->job)
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z" />
+                                        </svg>
+                                        {{ $guardian->job }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
-                @if ($guardian->pivot->is_financial_sponsor)
-                    <span title="مسؤول مالي" class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center dark:bg-green-900/30 dark:text-green-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </span>
-                @endif
-            </div>
-            <div class="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-                @if ($guardian->phone)
-                    <a href="tel:{{ $guardian->phone }}" class="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 transition-colors p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
-                        <svg class="w-5 h-5 ml-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        {{ $guardian->phone }}
-                    </a>
-                @endif
+
+                <div class="mt-8 grid grid-cols-2 gap-3">
+                    @if ($guardian->phone)
+                        <a href="tel:{{ $guardian->phone }}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 border border-gray-100 dark:bg-slate-700/50 dark:text-gray-300 dark:hover:bg-slate-700 dark:border-slate-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                            </svg>
+                            <span class="text-sm font-medium">اتصال</span>
+                        </a>
+                        <a href="https://wa.me/{{ $guardian->phone }}" target="_blank" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border border-green-100 dark:bg-green-900/10 dark:text-green-400 dark:hover:bg-green-900/20 dark:border-green-900/20 transition-colors">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                            </svg>
+                            <span class="text-sm font-medium">واتساب</span>
+                        </a>
+                    @else
+                        <div class="col-span-2 py-2.5 text-center text-sm text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200 dark:bg-slate-700/30 dark:border-slate-700">
+                            لا يوجد رقم هاتف
+                        </div>
+                    @endif
+                </div>
 
                 @if ($guardian->email)
-                    <a href="mailto:{{ $guardian->email }}" class="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 transition-colors p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
-                        <svg class="w-5 h-5 ml-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        {{ $guardian->email }}
-                    </a>
-                @endif
-
-                @if ($guardian->job)
-                    <div class="flex items-center text-gray-600 dark:text-gray-300 p-2">
-                        <svg class="w-5 h-5 ml-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        {{ $guardian->job }}
+                     <div class="mt-3">
+                        <a href="mailto:{{ $guardian->email }}" class="flex items-center justify-center gap-2 py-2.5 rounded-xl text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 dark:bg-indigo-900/10 dark:text-indigo-400 dark:hover:bg-indigo-900/20 dark:border-indigo-900/20 transition-colors w-full">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                            </svg>
+                            <span class="text-sm font-medium">إرسال بريد إلكتروني</span>
+                        </a>
                     </div>
                 @endif
             </div>
         </div>
     @empty
         <div class="md:col-span-2">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-12 text-center border border-gray-100 dark:border-gray-700">
-                <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0c-.83.63-1.873 1-3 1a4.978 4.978 0 01-3-1m3-4a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">لا يوجد أولياء أمور</h3>
-                <p class="text-gray-500 dark:text-gray-400">لم يتم إضافة أي ولي أمر لهذا الطالب</p>
-            </div>
+            <x-ui.empty-state 
+                icon="users"
+                title="لا يوجد أولياء أمور"
+                description="لم يتم إضافة أي ولي أمر لهذا الطالب حتى الآن."
+            />
         </div>
     @endforelse
 </div>

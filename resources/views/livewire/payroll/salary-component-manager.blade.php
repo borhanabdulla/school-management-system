@@ -1,35 +1,35 @@
 <div class="p-6">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-slate-800">إدارة بنود الراتب</h2>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">إدارة بنود الراتب</h2>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Form Section -->
         <div class="lg:col-span-1">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="text-lg font-semibold text-slate-800 mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                     {{ $editingId ? 'تعديل بند' : 'إضافة بند جديد' }}
                 </h3>
 
                 <form wire:submit.prevent="save" class="space-y-4">
                     <!-- Name -->
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">اسم البند</label>
-                        <input type="text" wire:model="name" class="w-full rounded-lg border-slate-300 focus:border-purple-500 focus:ring-purple-500">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">اسم البند</label>
+                        <input type="text" wire:model="name" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-purple-500 focus:ring-purple-500">
                         @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Type -->
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">النوع</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">النوع</label>
                         <div class="flex gap-4">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" wire:model.live="type" value="allowance" class="text-purple-600 focus:ring-purple-500">
-                                <span class="text-sm text-slate-700">استحقاق (بدل)</span>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">استحقاق (بدل)</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" wire:model.live="type" value="deduction" class="text-red-600 focus:ring-red-500">
-                                <span class="text-sm text-slate-700">استقطاع (خصم)</span>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">استقطاع (خصم)</span>
                             </label>
                         </div>
                     </div>
@@ -38,25 +38,25 @@
                     <div>
                         <label class="flex items-center gap-2 cursor-pointer mb-2">
                             <input type="checkbox" wire:model.live="is_percentage" class="rounded text-purple-600 focus:ring-purple-500">
-                            <span class="text-sm font-medium text-slate-700">حساب كنسبة مئوية؟</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">حساب كنسبة مئوية؟</span>
                         </label>
 
                         @if($is_percentage)
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">النسبة (%)</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">النسبة (%)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.01" wire:model="percentage_value" class="w-full rounded-lg border-slate-300 focus:border-purple-500 focus:ring-purple-500 pl-8">
-                                    <span class="absolute left-3 top-2.5 text-slate-400">%</span>
+                                    <input type="number" step="0.01" wire:model="percentage_value" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-purple-500 focus:ring-purple-500 pl-8">
+                                    <span class="absolute left-3 top-2.5 text-gray-400">%</span>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-1">نسبة من الراتب الأساسي</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">نسبة من الراتب الأساسي</p>
                                 @error('percentage_value') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
                         @else
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">المبلغ الثابت</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">المبلغ الثابت</label>
                                 <div class="relative">
-                                    <input type="number" step="0.01" wire:model="fixed_value" class="w-full rounded-lg border-slate-300 focus:border-purple-500 focus:ring-purple-500 pl-16">
-                                    <span class="absolute left-3 top-2.5 text-slate-400">SAR</span>
+                                    <input type="number" step="0.01" wire:model="fixed_value" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-purple-500 focus:ring-purple-500 pl-16">
+                                    <span class="absolute left-3 top-2.5 text-gray-400">SAR</span>
                                 </div>
                                 @error('fixed_value') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
@@ -67,7 +67,7 @@
                     <div>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" wire:model="is_active" class="rounded text-purple-600 focus:ring-purple-500">
-                            <span class="text-sm text-slate-700">نشط</span>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">نشط</span>
                         </label>
                     </div>
 
@@ -77,7 +77,7 @@
                             {{ $editingId ? 'تحديث' : 'حفظ' }}
                         </button>
                         @if($editingId)
-                            <button type="button" wire:click="resetForm" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors">
+                            <button type="button" wire:click="resetForm" class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                                 إلغاء
                             </button>
                         @endif
@@ -90,33 +90,33 @@
         <div class="lg:col-span-2">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <table class="w-full text-right">
-                    <thead class="bg-slate-50">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                            <th class="px-6 py-3 text-xs font-medium text-slate-500 uppercase">الاسم</th>
-                            <th class="px-6 py-3 text-xs font-medium text-slate-500 uppercase">النوع</th>
-                            <th class="px-6 py-3 text-xs font-medium text-slate-500 uppercase">القيمة</th>
-                            <th class="px-6 py-3 text-xs font-medium text-slate-500 uppercase">الحالة</th>
-                            <th class="px-6 py-3 text-xs font-medium text-slate-500 uppercase">الإجراءات</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">الاسم</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">النوع</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">القيمة</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">الحالة</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200">
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($components as $component)
-                            <tr class="hover:bg-slate-50">
-                                <td class="px-6 py-4 text-sm font-medium text-slate-900">{{ $component->name }}</td>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $component->name }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $component->type === 'allowance' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $component->type === 'allowance' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' }}">
                                         {{ $component->type === 'allowance' ? 'استحقاق' : 'استقطاع' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-slate-600">
+                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                                     @if($component->is_percentage)
-                                        {{ $component->percentage_value }}% <span class="text-xs text-slate-400">(من الأساسي)</span>
+                                        {{ $component->percentage_value }}% <span class="text-xs text-gray-400">(من الأساسي)</span>
                                     @else
                                         {{ number_format($component->fixed_value, 2) }} SAR
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $component->is_active ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-800' }}">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $component->is_active ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
                                         {{ $component->is_active ? 'نشط' : 'غير نشط' }}
                                     </span>
                                 </td>
