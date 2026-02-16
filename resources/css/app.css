@@ -5,6 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Interactive Illustrations Animations */
+@import './illustrations.css';
+
 [x-cloak] {
     display: none !important;
 }

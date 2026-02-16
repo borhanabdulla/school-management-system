@@ -263,12 +263,17 @@ class StudentRegistration extends Component
             return;
         }
 
-        $this->applicable_fees = FeeStructure::where('academic_year_id', $academicYear->id)
+        $this->applicable_fees = FeeStructure::select('id', 'fee_type_id', 'amount', 'due_date')
+            ->where('academic_year_id', $academicYear->id)
             ->where(function ($query) {
                 $query->where('grade_id', $this->form->grade_id)
                     ->orWhereNull('grade_id');
             })
-            ->with('feeType')
+            ->with([
+                'feeType' => function ($q) {
+                    $q->select('id', 'name');
+                }
+            ])
             ->get();
         // Removed dump for cleanup
 
@@ -339,6 +344,12 @@ class StudentRegistration extends Component
     public function submit(RegisterStudentAction $action)
     {
         $this->form->validate();
+
+        \Illuminate\Support\Facades\Log::info('Submitting student registration', [
+            'has_photo' => isset($this->form->photo),
+            'photo_type' => isset($this->form->photo) ? get_class($this->form->photo) : 'null',
+            'is_uploaded_file' => isset($this->form->photo) && $this->form->photo instanceof \Illuminate\Http\UploadedFile,
+        ]);
 
         if (!$this->form->validateGuardians($this->addedGuardians)) {
             return;

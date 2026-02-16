@@ -66,6 +66,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Guardians
     Route::get('/guardians', \App\Livewire\Guardian\GuardianManager::class)->name('guardians.index')->middleware('can:guardians.view');
     Route::get('/guardians/create', \App\Livewire\Guardian\GuardianCreate::class)->name('guardians.create')->middleware('can:guardians.create');
+    Route::get('/guardians/{guardian}/edit', \App\Livewire\Guardian\GuardianEdit::class)->name('guardians.edit')->middleware('can:guardians.edit');
     Route::get('/guardians/{id}', \App\Livewire\Guardian\GuardianShow::class)->name('guardians.show')->middleware('can:guardians.view');
 
     // Course Assignment (Teacher Assignment to Sections)

@@ -29,6 +29,9 @@ class WeeklyTimetable extends Component
                 'attendanceStatus' => [],
                 'weekDates' => [],
                 'canTakeAttendance' => false,
+                'allTimeSlots' => collect(),
+                'workingDays' => [],
+                'gridLookup' => [],
             ]);
         }
 
@@ -60,12 +63,12 @@ class WeeklyTimetable extends Component
         $timetableEntries = Timetable::query()
             ->select('id', 'class_section_id', 'course_offering_id', 'time_slot_id')
             ->with([
-                    'classSection:id,name,grade_id',
-                    'classSection.grade:id,name',
-                    'courseOffering:id,subject_id',
-                    'courseOffering.subject:id,name',
-                    'timeSlot:id,day_of_week,start_time,end_time,order_index,label'
-                ])
+                'classSection:id,name,grade_id',
+                'classSection.grade:id,name',
+                'courseOffering:id,subject_id',
+                'courseOffering.subject:id,name',
+                'timeSlot:id,day_of_week,start_time,end_time,order_index,label'
+            ])
             ->when(
                 $responsibleRole === 'class_teacher',
                 fn($q) => $q->whereHas(

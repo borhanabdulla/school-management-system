@@ -9,6 +9,7 @@ use App\Domains\Academic\Control\Services\SecrecyService;
 use App\Domains\Academic\Grading\Services\GradingHealthGate;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use App\Domains\Academic\ClassSection\Models\ClassSection;
 
 class ControlDashboard extends Component
 {
@@ -17,10 +18,8 @@ class ControlDashboard extends Component
     // Form fields
     public $name;
 
-    #[Locked]
     public $academic_year_id;
 
-    #[Locked]
     public $term_id;
 
     public $start_date;
@@ -32,7 +31,6 @@ class ControlDashboard extends Component
     #[Locked]
     public $selectedSessionId;
 
-    #[Locked]
     public $selectedClassSectionId = '';
 
 
@@ -74,7 +72,7 @@ class ControlDashboard extends Component
 
     public function getClassSectionsProperty()
     {
-        return \App\Models\ClassSection::with('grade')
+        return ClassSection::with('grade')
             ->get()
             ->sortBy(['grade.name', 'name']);
     }

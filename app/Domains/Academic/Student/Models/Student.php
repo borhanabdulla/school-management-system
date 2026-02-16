@@ -80,6 +80,7 @@ class Student extends Model
         'current_grade_id',
         'current_class_section_id',
         'status',
+        'profile_photo_path',
     ];
 
     protected $casts = [

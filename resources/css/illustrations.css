@@ -1,0 +1,155 @@
+/* ===================================
+   رسوم توضيحية تفاعلية - Animations
+   =================================== */
+
+/* Pulse animation */
+@keyframes pulse-slow {
+    0%, 100% { transform: scale(1); opacity: 0.1; }
+    50% { transform: scale(1.1); opacity: 0.2; }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Float animation */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Scale animation */
+@keyframes scale-animation {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.scale-animation {
+    animation: scale-animation 0.6s ease-out forwards;
+}
+
+/* Checkmark path animation */
+@keyframes draw-checkmark {
+    to { stroke-dashoffset: 0; }
+}
+
+.checkmark-path {
+    animation: draw-checkmark 0.8s ease-out 0.3s forwards;
+}
+
+/* Particle animation */
+@keyframes particle-float {
+    0% { transform: translate(0, 0); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+}
+
+.particle-1 { animation: particle-float 2s ease-in-out infinite; --tx: -20px; --ty: -20px; }
+.particle-2 { animation: particle-float 2s ease-in-out infinite 0.5s; --tx: 20px; --ty: -15px; }
+.particle-3 { animation: particle-float 2s ease-in-out infinite 1s; --tx: 15px; --ty: 20px; }
+.particle-4 { animation: particle-float 2s ease-in-out infinite 1.5s; --tx: -15px; --ty: 15px; }
+
+/* Coin float animation */
+@keyframes coin-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+}
+
+.coin-float {
+    animation: coin-float 2s ease-in-out infinite;
+}
+
+/* Arrow grow animation */
+@keyframes arrow-grow {
+    0% { stroke-dasharray: 100; stroke-dashoffset: 100; }
+    100% { stroke-dasharray: 100; stroke-dashoffset: 0; }
+}
+
+.arrow-grow {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: arrow-grow 1s ease-out 0.5s forwards;
+}
+
+/* Bar grow up animation */
+@keyframes bar-grow-up {
+    from { 
+        transform: scaleY(0);
+        transform-origin: bottom;
+    }
+    to { 
+        transform: scaleY(1);
+        transform-origin: bottom;
+    }
+}
+
+.bar-grow-up {
+    animation: bar-grow-up 1s ease-out forwards;
+}
+
+/* Trend line animation */
+@keyframes draw-trend {
+    to { stroke-dashoffset: 0; }
+}
+
+.trend-line {
+    animation: draw-trend 1.5s ease-out forwards;
+}
+
+/* Data point animation */
+@keyframes data-point-appear {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.data-point {
+    transform-origin: center;
+    animation: data-point-appear 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+/* Alert pulse */
+@keyframes alert-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.alert-pulse {
+    animation: alert-pulse 1.5s ease-in-out infinite;
+}
+
+/* Warning waves */
+@keyframes warning-wave {
+    0% { r: 50; opacity: 0.6; }
+    100% { r: 80; opacity: 0; }
+}
+
+.wave-1 { animation: warning-wave 2s ease-out infinite; }
+.wave-2 { animation: warning-wave 2s ease-out infinite 0.6s; }
+.wave-3 { animation: warning-wave 2s ease-out infinite 1.2s; }
+
+/* Equation fade */
+@keyframes equation-fade {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.equation-fade {
+    animation: equation-fade 2s ease-in-out infinite;
+}
+
+/* Date pulse */
+@keyframes date-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.2); opacity: 1; }
+}
+
+.date-pulse {
+    animation: date-pulse 2s ease-in-out infinite;
+}

@@ -105,9 +105,9 @@
                     </div>
                     
                     <div class="p-4 bg-background border-t border-border">
-                        <button class="w-full py-2.5 px-4 bg-surface border border-border rounded-xl text-sm font-semibold text-primary hover:bg-indigo-50 dark:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-400 hover:border-indigo-200 transition-all duration-300 shadow-sm hover:shadow">
+                        <a href="{{ route('guardians.edit', $guardian->id) }}" wire:navigate class="block w-full text-center py-2.5 px-4 bg-surface border border-border rounded-xl text-sm font-semibold text-primary hover:bg-indigo-50 dark:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-400 hover:border-indigo-200 transition-all duration-300 shadow-sm hover:shadow">
                             تعديل البيانات
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

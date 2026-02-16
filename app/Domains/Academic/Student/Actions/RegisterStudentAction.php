@@ -176,8 +176,12 @@ class RegisterStudentAction
             return;
         }
 
-        $path = $photo->store('students/photos', 'public');
-        $student->updateQuietly(['profile_photo_path' => $path]);
+        try {
+            $path = $photo->store('students/photos', 'public');
+            $student->updateQuietly(['profile_photo_path' => $path]);
+        } catch (\Exception $e) {
+            // Silently fail if photo upload fails
+        }
     }
 
     protected function processGuardians(Student $student, array $guardiansData): void

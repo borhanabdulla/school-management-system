@@ -42,6 +42,13 @@ class GuardianManager extends Component
         // Check if guardian has students before deleting?
         // For now, just delete. The DB cascade might handle it or we should prevent it.
         // REQ-03 says "edit", doesn't explicitly mention delete, but it's standard.
-        $guardian->delete();
+        try {
+            $guardian->delete();
+            $this->dispatch('notify', message: 'تم حذف ولي الأمر بنجاح');
+        } catch (\App\Infrastructure\Exceptions\CannotDeleteException $e) {
+            $this->dispatch('notify', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('notify', type: 'error', message: 'حدث خطأ أثناء الحذف: ' . $e->getMessage());
+        }
     }
 }
