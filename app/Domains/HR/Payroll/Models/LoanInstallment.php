@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LoanInstallment extends Model
 {
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_PAID = 'paid';
+
     protected $fillable = [
         'loan_id',
         'amount',
@@ -29,4 +32,16 @@ class LoanInstallment extends Model
     {
         return $this->belongsTo(PayrollBatch::class);
     }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', self::STATUS_PENDING);
+    }
+
+    public function scopePaid($query)
+    {
+        return $query->where('status', self::STATUS_PAID);
+    }
+
 }
+

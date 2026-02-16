@@ -67,6 +67,7 @@ class CourseAssignment extends Component
     {
         // استعلام خفيف جداً ومخصص للـ Dropdown
         return Teacher::query()
+            ->active()
             ->join('staff', 'teachers.staff_id', '=', 'staff.id')
             ->whereNotNull('staff.user_id') // نتأكد أن لديهم حساب
             ->select('teachers.id', 'staff.first_name', 'staff.last_name')

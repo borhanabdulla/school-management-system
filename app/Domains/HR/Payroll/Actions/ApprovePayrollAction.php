@@ -45,7 +45,7 @@ class ApprovePayrollAction
             if ($installmentIds->isNotEmpty()) {
                 LoanInstallment::whereIn('id', $installmentIds)
                     ->update([
-                        'status' => 'paid',
+                        'status' => LoanInstallment::STATUS_PAID,
                         'payroll_batch_id' => $batch->id
                     ]);
 
@@ -54,7 +54,7 @@ class ApprovePayrollAction
                 })->get();
 
                 foreach ($loans as $loan) {
-                    $paid = $loan->installments()->where('status', 'paid')->sum('amount');
+                    $paid = $loan->installments()->paid()->sum('amount');
                     $loan->update([
                         'paid_amount' => $paid,
                         'status' => $paid >= $loan->amount ? LoanStatus::Paid : LoanStatus::Approved

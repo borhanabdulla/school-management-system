@@ -75,7 +75,7 @@ class TeacherLookupService
                         $q->where('joining_date', '<=', $year->end_date)
                             ->where(function ($sub) {
                                 // الموظف نشط أو في إجازة (ليس منتهي الخدمة)
-                                $sub->whereIn('status', ['active', 'on_leave']);
+                                $sub->employed();
                             });
                     });
                 }
@@ -121,7 +121,7 @@ class TeacherLookupService
         return Cache::remember($key, now()->addMinutes(30), function () use ($termId) {
             // ✅ أزلنا email من select (لا يوجد في staff)
             return Teacher::with(['staff:id,first_name,last_name,user_id', 'staff.user:id,email'])
-                ->whereHas('staff', fn($q) => $q->where('status', \App\Domains\HR\Staff\Enums\StaffStatus::Active->value))
+                ->whereHas('staff', fn($q) => $q->active())
                 // ✅ PR-5: استخدام العلاقة الجديدة لحساب عدد الحصص
                 ->withCount([
                     'timetableSessions' => function ($query) use ($termId) {

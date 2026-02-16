@@ -242,7 +242,9 @@ class TimetableBuilder extends Component
     #[Computed]
     public function teachers()
     {
-        $query = Teacher::with('staff:id,first_name,last_name');
+        $query = Teacher::query()
+            ->active()
+            ->with('staff:id,first_name,last_name');
 
         if ($this->searchTeacher) {
             $search = $this->searchTeacher;

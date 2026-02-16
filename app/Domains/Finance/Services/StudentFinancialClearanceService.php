@@ -19,7 +19,7 @@ class StudentFinancialClearanceService
         // Outstanding = Sum(Total Amount - Paid Amount) for non-cancelled invoices
         return Invoice::where('student_id', $studentId)
             ->where('academic_year_id', $academicYearId)
-            ->where('status', '!=', 'cancelled')
+            ->notCancelled()
             ->get()
             ->sum(function ($invoice) {
                 // Ensure we don't have negative outstanding (if overpaid somehow, though strictly prevented now)
@@ -45,7 +45,7 @@ class StudentFinancialClearanceService
         // 1. إجمالي الفواتير الصادرة قبل بداية السنة
         $invoicedBeforeStats = Invoice::where('student_id', $studentId)
             ->whereDate('issue_date', '<', $targetYearStart)
-            ->where('status', '!=', 'cancelled')
+            ->notCancelled()
             ->sum('total_amount'); // total_amount is Net
 
         // 2. إجمالي المدفوعات المسجلة قبل بداية السنة (لأي فاتورة تابعة للطالب)
@@ -113,7 +113,7 @@ class StudentFinancialClearanceService
         // Query: Select student_id, sum(total_amount - paid_amount)
         $outstandingBalances = Invoice::whereIn('student_id', $studentIds)
             ->where('academic_year_id', $academicYearId)
-            ->where('status', '!=', 'cancelled')
+            ->notCancelled()
             ->selectRaw('student_id, SUM(CASE WHEN (total_amount - paid_amount) > 0 THEN (total_amount - paid_amount) ELSE 0 END) as balance')
             ->groupBy('student_id')
             ->pluck('balance', 'student_id');

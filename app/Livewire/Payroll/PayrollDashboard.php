@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use App\Domains\HR\Payroll\Models\PayrollBatch;
 use App\Domains\HR\Staff\Models\Staff;
 use App\Domains\HR\Payroll\Models\Contract;
+use App\Domains\HR\Payroll\Enums\PayrollBatchStatus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -55,11 +56,11 @@ class PayrollDashboard extends Component
 
         // 2. Active Staff
         $activeStaff = Staff::whereHas('contracts', function ($q) {
-            $q->where('status', 'active');
+            $q->active();
         })->count();
 
         // 3. Pending Batches
-        $pendingBatches = PayrollBatch::whereIn('status', ['draft', 'frozen'])->count();
+        $pendingBatches = PayrollBatch::whereIn('status', [PayrollBatchStatus::Draft, PayrollBatchStatus::Frozen])->count();
 
         $this->stats = [
             'total_cost' => $currentCost,
@@ -73,7 +74,7 @@ class PayrollDashboard extends Component
     {
         // Simple estimation: Sum of active contracts' basic salary + fixed allowances
         // This is a rough estimate for the dashboard when no batch exists.
-        return Contract::where('status', 'active')->sum('basic_salary');
+        return Contract::active()->sum('basic_salary');
         // Note: This ignores allowances for simplicity in this estimation, 
         // or we could load them. For now, basic salary is a safe lower bound.
     }
