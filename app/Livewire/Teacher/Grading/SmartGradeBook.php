@@ -7,8 +7,10 @@ use App\Domains\Academic\Grading\Actions\RecordMonthlyGradeAction;
 use App\Domains\Academic\Grading\Models\MonthlyGrade;
 use App\Domains\Academic\Grading\Models\GradebookMonth;
 use App\Domains\Academic\Grading\Models\GradebookSettings;
+use App\Domains\Academic\Grading\Models\MonthlyCategoryMapping;
 use App\Domains\Academic\Grading\Models\SystemSetting;
 use App\Domains\Academic\Services\AcademicWriteGuard;
+use App\Infrastructure\Exceptions\InvalidOperationException;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -181,16 +183,24 @@ class SmartGradeBook extends Component
             return;
         }
 
+        $categoryKeyMap = $this->resolveTemplateCategoryKeyMap();
+
         $existingGrades = MonthlyGrade::where('course_offering_id', $this->courseOfferingId)
             ->whereIn('student_id', $studentIds)
             ->whereIn('gradebook_month_id', $monthIds)
             // performance: fetch only what we need
-            ->get(['student_id', 'gradebook_month_id', 'category', 'category_key', 'score']);
+            ->get(['student_id', 'gradebook_month_id', 'category', 'category_key', 'template_category_id', 'score']);
 
         foreach ($existingGrades as $grade) {
-            $categoryKey = (string) ($grade->category_key ?? '');
-            if ($categoryKey === '' && $grade->category) {
-                $categoryKey = $this->resolveCategoryKey($grade->category);
+            $categoryKey = '';
+            $templateCategoryId = $grade->template_category_id;
+            if ($templateCategoryId && isset($categoryKeyMap[$templateCategoryId])) {
+                $categoryKey = (string) $categoryKeyMap[$templateCategoryId];
+            } else {
+                $categoryKey = (string) ($grade->category_key ?? '');
+                if ($categoryKey === '' && $grade->category) {
+                    $categoryKey = $this->resolveCategoryKey($grade->category);
+                }
             }
 
             if ($categoryKey === '') {
@@ -254,16 +264,21 @@ class SmartGradeBook extends Component
             return;
         }
 
-        app(RecordMonthlyGradeAction::class)->execute(
-            offering: $this->courseOffering,
-            studentId: (int) $studentId,
-            monthId: (int) $monthId,
-            categoryKey: (string) $categoryKey,
-            score: $value,
-            maxScore: (float) $maxScore,
-            categoryLabel: (string) $categoryLabel,
-            gradedByUserId: auth()->id()
-        );
+        try {
+            app(RecordMonthlyGradeAction::class)->execute(
+                offering: $this->courseOffering,
+                studentId: (int) $studentId,
+                monthId: (int) $monthId,
+                categoryKey: (string) $categoryKey,
+                score: $value,
+                maxScore: (float) $maxScore,
+                categoryLabel: (string) $categoryLabel,
+                gradedByUserId: auth()->id()
+            );
+        } catch (InvalidOperationException $e) {
+            $this->dispatch('notify', message: $e->getMessage(), type: 'error');
+            return;
+        }
 
         // Update local state (keeps UI consistent without reloading)
         $this->grades[$studentId][$monthId][$categoryKey] = $value;
@@ -423,6 +438,26 @@ class SmartGradeBook extends Component
         }
 
         return GradebookSettings::generateCategoryKey($label);
+    }
+
+    private function resolveTemplateCategoryKeyMap(): array
+    {
+        $termId = $this->courseOffering->term_id;
+        $gradeId = $this->courseOffering->classSection?->grade_id;
+        $subjectId = $this->courseOffering->subject_id;
+        $academicYearId = $this->courseOffering->academic_year_id;
+
+        if (! $termId || ! $gradeId || ! $subjectId || ! $academicYearId) {
+            return [];
+        }
+
+        return MonthlyCategoryMapping::query()
+            ->where('academic_year_id', $academicYearId)
+            ->where('term_id', $termId)
+            ->where('grade_id', $gradeId)
+            ->where('subject_id', $subjectId)
+            ->pluck('category_key', 'template_category_id')
+            ->toArray();
     }
 
     private function authorizeOffering(string $ability): void

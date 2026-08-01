@@ -235,8 +235,17 @@ class MainDashboard extends Component
         return AcademicYear::find($this->academicYearId);
     }
 
+    public function getMissingActiveYearProperty(): bool
+    {
+        return !$this->allYears && empty($this->academicYearId ?? $this->activeYearId());
+    }
+
     public function render()
     {
+        if ($this->missingActiveYear) {
+            return view('livewire.dashboard.main-dashboard-empty');
+        }
+
         return view('livewire.dashboard.main-dashboard', $this->buildDashboardData());
     }
 
@@ -551,6 +560,7 @@ class MainDashboard extends Component
             'termId' => $termId,
             'gradeId' => $this->gradeId,
             'range' => $this->range,
+            'allYears' => $this->allYears,
         ];
     }
 

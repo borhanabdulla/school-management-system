@@ -43,6 +43,7 @@ class WeeklyTimetable extends Component
             $responsibleRole = $settings->responsible_role->value ?? 'subject_teacher';
         }
         $canTakeAttendance = $responsibleRole !== 'admin_staff';
+        $termId = school()->activeTerm()?->id;
 
         // ✅ PR-6: Calculate week dates based on weekend_days from academic year
         $calendarService = app(SchoolCalendarService::class);
@@ -84,7 +85,7 @@ class WeeklyTimetable extends Component
                         ->where('academic_year_id', $academicYear?->id)
                 )
             )
-            ->where('term_id', school()->activeTerm()?->id)
+            ->where('term_id', $termId)
             ->get()
             ->sortBy(['timeSlot.order_index', 'timeSlot.day_of_week']);
 
@@ -112,7 +113,9 @@ class WeeklyTimetable extends Component
         $attendanceStatus = $attendanceService->getWeeklyAttendanceStatus(
             $teacher->id,
             $startOfWeek->format('Y-m-d'),
-            $endOfWeek->format('Y-m-d')
+            $endOfWeek->format('Y-m-d'),
+            $termId,
+            $academicYear?->id
         );
 
         // Map dates to days for the view

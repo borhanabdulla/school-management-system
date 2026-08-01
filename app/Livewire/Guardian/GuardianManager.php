@@ -3,6 +3,7 @@
 namespace App\Livewire\Guardian;
 
 use App\Domains\Academic\Student\Models\Guardian;
+use App\Domains\Academic\Student\Actions\DeleteGuardianAction;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -43,7 +44,7 @@ class GuardianManager extends Component
         // For now, just delete. The DB cascade might handle it or we should prevent it.
         // REQ-03 says "edit", doesn't explicitly mention delete, but it's standard.
         try {
-            $guardian->delete();
+            app(DeleteGuardianAction::class)->execute($guardian);
             $this->dispatch('notify', message: 'تم حذف ولي الأمر بنجاح');
         } catch (\App\Infrastructure\Exceptions\CannotDeleteException $e) {
             $this->dispatch('notify', type: 'error', message: $e->getMessage());

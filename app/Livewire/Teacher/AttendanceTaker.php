@@ -71,7 +71,11 @@ class AttendanceTaker extends Component
 
         // ✅ PR1: Check Calendar for Holidays
         $calendarService = app(\App\Domains\Academic\Calendar\Services\SchoolCalendarService::class);
-        if ($calendarService->isHoliday($this->date)) {
+        $isHoliday = $academicYearId
+            ? $calendarService->isHolidayForYear($this->date, $academicYearId)
+            : $calendarService->isHoliday($this->date);
+
+        if ($isHoliday) {
             $this->isHoliday = true;
             session()->flash('warning', __('attendance.holiday_warning'));
         }
