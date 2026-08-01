@@ -480,14 +480,20 @@ class StudentLookupService
     }
 
     /**
-     * جلب طلاب شعبة معينة (للتقارير)
+     * جلب طلاب شعبة معينة ضمن سنة دراسية محددة (للتقارير)
      * 
      * @param int $classSectionId
+     * @param int $academicYearId
      * @return Collection
      */
-    public function getByClassSection(int $classSectionId): Collection
+    public function getByClassSection(int $classSectionId, int $academicYearId): Collection
     {
-        return Student::where('current_class_section_id', $classSectionId)
+        return Student::query()
+            ->whereHas('enrollments', function (Builder $q) use ($classSectionId, $academicYearId) {
+                $q->where('class_section_id', $classSectionId)
+                    ->where('academic_year_id', $academicYearId)
+                    ->where('status', EnrollmentStatus::Active->value);
+            })
             ->active()
             ->orderBy('first_name_ar')
             ->get(['id', 'first_name_ar', 'family_name_ar', 'admission_number']);

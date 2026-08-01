@@ -268,8 +268,8 @@ class GradingCalculatorService
             $marksByCategory[$category->id][] = $mark;
         }
 
-        $roundingRule = $template->rounding_rule ?? 'half_up';
-        $roundingPrecision = (int) ($template->rounding_precision ?? 2);
+        $roundingRule = $template->rounding_rule ?? 'nearest_integer';
+        $roundingPrecision = (int) ($template->rounding_precision ?? 0);
 
         $categoryResults = [];
         $totalScore = 0.0;
@@ -398,6 +398,7 @@ class GradingCalculatorService
         $factor = 10 ** $precision;
 
         return match ($rule) {
+            'none' => $value,
             'up' => ceil($value * $factor) / $factor,
             'down' => floor($value * $factor) / $factor,
             'nearest_integer' => round($value, 0, PHP_ROUND_HALF_UP),

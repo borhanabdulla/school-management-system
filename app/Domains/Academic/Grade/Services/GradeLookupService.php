@@ -85,7 +85,10 @@ class GradeLookupService
         return Cache::remember($key, self::CACHE_TTL, function () use ($yearId) {
             return Grade::with([
                 'stage',
-                'subjects:id,name,code' => fn($q) => $q->wherePivot('is_active', true)
+                'subjects' => function ($q) {
+                    $q->select(['subjects.id', 'subjects.name', 'subjects.code'])
+                        ->wherePivot('is_active', true);
+                },
             ])
                 ->withCount([
                     'sections' => fn($q) => $q->where('academic_year_id', $yearId),

@@ -8,8 +8,6 @@ enum EnrollmentStatus: string
     case Completed = 'completed';
     case Failed = 'failed';
     case Withdrawn = 'withdrawn';
-    case Returning = 'returning';
-    case New = 'new';
 
     public function label(): string
     {
@@ -18,8 +16,6 @@ enum EnrollmentStatus: string
             self::Completed => 'مكتمل',
             self::Failed => 'راسب',
             self::Withdrawn => 'منسحب',
-            self::Returning => 'معيد',
-            self::New => 'مستجد',
         };
     }
 }

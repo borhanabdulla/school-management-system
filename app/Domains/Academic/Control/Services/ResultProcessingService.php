@@ -15,6 +15,8 @@ use App\Domains\Academic\Grading\Services\SubjectScorePolicyResolver;
 use App\Domains\Academic\Grading\Services\SubjectGradingConfigResolver;
 use App\Domains\Academic\Grading\Services\GradingHealthGate;
 use App\Domains\Academic\Grading\Models\SystemSetting;
+use App\Domains\Academic\Grading\Exceptions\InvalidGradingConfigException;
+use App\Domains\Academic\Grading\Exceptions\MissingSubjectConfigException;
 use App\Domains\Academic\Term\Models\Term;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
@@ -365,7 +367,11 @@ class ResultProcessingService
 
         // 4. تحديد درجة النجاح والتقدير
         $courseOffering = CourseOffering::with('classSection')->findOrFail($courseOfferingId);
-        $config = $this->configResolver->resolve($courseOffering, $term);
+        try {
+            $config = $this->configResolver->resolve($courseOffering, $term);
+        } catch (InvalidGradingConfigException | MissingSubjectConfigException $e) {
+            throw InvalidOperationException::make('إعدادات الدرجات غير مكتملة');
+        }
         $template = $config->template;
 
         $scores = $this->scorePolicy->resolveScores($courseOffering, $term->id);

@@ -170,7 +170,7 @@ class GradeSyncService
             $category = $this->findCategoryForCourseOffering(
                 courseOffering: $courseOffering,
                 mappingType: 'attendance',
-                categoryName: $attendanceCategoryLabel ?: null
+                categoryName: null
             );
 
             if (!$category) {
@@ -217,14 +217,21 @@ class GradeSyncService
                 weight: (float) $category->weight
             );
 
-            MonthlyGrade::withoutEvents(function () use ($student, $courseOffering, $month, $attendanceCategoryLabel, $attendanceCategoryKey, $score, $attendanceMaxScore): void {
+            $templateCategoryId = $category->id;
+
+            MonthlyGrade::withoutEvents(function () use ($student, $courseOffering, $month, $attendanceCategoryLabel, $attendanceCategoryKey, $attendanceMaxScore, $score, $templateCategoryId): void {
                 $grade = MonthlyGrade::query()
                     ->where([
                         'student_id' => $student->id,
                         'course_offering_id' => $courseOffering->id,
                         'gradebook_month_id' => $month->id,
                     ])
-                    ->where(function ($query) use ($attendanceCategoryKey, $attendanceCategoryLabel) {
+                    ->where(function ($query) use ($attendanceCategoryKey, $attendanceCategoryLabel, $templateCategoryId) {
+                        if ($templateCategoryId) {
+                            $query->where('template_category_id', $templateCategoryId);
+                            return;
+                        }
+
                         $query->where('category_key', $attendanceCategoryKey)
                             ->orWhere('category', $attendanceCategoryLabel);
                     })
@@ -240,6 +247,7 @@ class GradeSyncService
 
                 $grade->fill([
                     'category_key' => $attendanceCategoryKey,
+                    'template_category_id' => $templateCategoryId,
                     'category' => $attendanceCategoryLabel,
                     'score' => $score,
                     'max_score' => $attendanceMaxScore,
@@ -390,16 +398,34 @@ class GradeSyncService
             return null;
         }
 
-        $filtered = $categories->where('mapping_type', $mappingType);
+        $filtered = $categories->where('mapping_type', $mappingType)->values();
         if ($filtered->isEmpty()) {
             return null;
         }
 
         if ($categoryName) {
-            $matched = $filtered->firstWhere('name', $categoryName);
-            if ($matched) {
-                return $matched;
+            $matches = $filtered->where('name', $categoryName)->values();
+            if ($matches->count() === 1) {
+                return $matches->first();
             }
+
+            Log::warning('Template category match failed', [
+                'course_offering_id' => $courseOffering->id,
+                'mapping_type' => $mappingType,
+                'category_name' => $categoryName,
+                'match_count' => $matches->count(),
+                'candidate_count' => $filtered->count(),
+            ]);
+            return null;
+        }
+
+        if ($filtered->count() !== 1) {
+            Log::warning('Template category match ambiguous', [
+                'course_offering_id' => $courseOffering->id,
+                'mapping_type' => $mappingType,
+                'candidate_count' => $filtered->count(),
+            ]);
+            return null;
         }
 
         return $filtered->first();

@@ -8,7 +8,6 @@ enum ResultDecision: string
     case Pass = 'pass';
     case Fail = 'fail';
     case Conditional = 'conditional';
-    case Absent = 'absent';
     case Pending = 'pending';
 
     public function label(): string
@@ -17,7 +16,6 @@ enum ResultDecision: string
             self::Pass => 'ناجح',
             self::Fail => 'راسب',
             self::Conditional => 'مشروط (دور ثاني)',
-            self::Absent => 'غائب',
             self::Pending => 'قيد المعالجة',
         };
     }
@@ -28,7 +26,6 @@ enum ResultDecision: string
             self::Pass => 'success',
             self::Fail => 'danger',
             self::Conditional => 'warning',
-            self::Absent => 'gray',
             self::Pending => 'info',
         };
     }

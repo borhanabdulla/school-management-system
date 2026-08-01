@@ -5,6 +5,7 @@ namespace App\Domains\Academic\Attendance\Services;
 use App\Domains\Academic\Attendance\Models\Attendance;
 use App\Domains\Academic\Student\Models\Student;
 use App\Domains\Academic\ClassSection\Models\ClassSection;
+use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\Calendar\Services\SchoolCalendarService;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
@@ -25,20 +26,35 @@ class AttendanceReportService
      */
     public function getMonthlyReport(int $classSectionId, int $month, int $year, ?int $termId = null): array
     {
+        if (!$termId) {
+            throw new \InvalidArgumentException('termId is required for attendance reports.');
+        }
+
+        $term = Term::query()
+            ->select('id', 'academic_year_id')
+            ->find($termId);
+
+        if (!$term) {
+            throw new \InvalidArgumentException("Invalid termId: {$termId}.");
+        }
+
+        $academicYearId = (int) $term->academic_year_id;
+
         // 1. توليد أيام الشهر مع معلومات العطل
-        $days = $this->getMonthDays($month, $year);
+        $days = $this->getMonthDays($month, $year, $academicYearId);
 
         // 2. جلب طلاب الشعبة
         $students = app(\App\Domains\Academic\Student\Services\StudentLookupService::class)
-            ->getByClassSection($classSectionId);
+            ->getByClassSection($classSectionId, $academicYearId);
 
         // 3. جلب جميع سجلات الحضور (حاضر، غائب، الخ) لتجنب N+1 والغاء الافتراضات
         $startDate = Carbon::create($year, $month, 1)->startOfDay();
         $endDate = $startDate->copy()->endOfMonth();
 
         $attendanceRecords = Attendance::where('class_section_id', $classSectionId)
+            ->where('academic_year_id', $academicYearId)
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->when($termId, fn($q) => $q->where('term_id', $termId)) // ✅ PR1: Scope by Term if provided
+            ->where('term_id', $termId)
             ->get()
             ->groupBy(fn($record) => $record->student_id . '_' . $record->date->format('Y-m-d'));
 
@@ -102,18 +118,23 @@ class AttendanceReportService
      * توليد مصفوفة أيام الشهر مع معلومات العطل
      * ✅ PR1.1: Uses SchoolCalendarService as single source of truth (no duplicate logic)
      */
-    public function getMonthDays(int $month, int $year): array
+    public function getMonthDays(int $month, int $year, ?int $academicYearId = null): array
     {
         $startDate = Carbon::create($year, $month, 1);
         $endDate = $startDate->copy()->endOfMonth();
 
         $days = [];
         $period = CarbonPeriod::create($startDate, $endDate);
+        $weekendDays = $academicYearId
+            ? $this->calendarService->getWeekendDaysForYear($academicYearId)
+            : $this->calendarService->getWeekendDays();
 
         foreach ($period as $date) {
             // ✅ PR1.1: Single source of truth - all calendar logic via SchoolCalendarService
-            $isHoliday = $this->calendarService->isHoliday($date);
-            $isWeekend = $this->calendarService->isWeekend($date);
+            $isHoliday = $academicYearId
+                ? $this->calendarService->isHolidayForYear($date, $academicYearId)
+                : $this->calendarService->isHoliday($date);
+            $isWeekend = in_array($date->dayOfWeek, $weekendDays, true);
 
             $days[] = [
                 'date' => $date->format('Y-m-d'),

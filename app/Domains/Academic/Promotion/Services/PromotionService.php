@@ -13,6 +13,7 @@ use App\Domains\Academic\Promotion\Models\Promotion;
 use App\Domains\Academic\Student\Models\Student;
 use App\Domains\Academic\Student\Models\StudentEnrollment;
 use App\Domains\Academic\Student\Enums\EnrollmentStatus;
+use App\Domains\Academic\Student\Enums\EnrollmentType;
 use App\Domains\Academic\Grading\Models\SystemSetting;
 use App\Domains\Shared\Models\User;
 use App\Domains\Academic\Promotion\Exceptions\NoTargetYearException;
@@ -369,7 +370,9 @@ class PromotionService
                     'grade_id' => $toGrade?->id ?? $fromGrade->id,
                     'class_section_id' => $toSection?->id,
                     'enrollment_date' => now(),
-                    'enrollment_type' => $type === PromotionType::Repeated ? EnrollmentStatus::Returning : EnrollmentStatus::New ,
+                    'enrollment_type' => $type === PromotionType::Repeated
+                        ? EnrollmentType::Returning
+                        : EnrollmentType::New,
                     'status' => EnrollmentStatus::Active,
                 ]);
             }

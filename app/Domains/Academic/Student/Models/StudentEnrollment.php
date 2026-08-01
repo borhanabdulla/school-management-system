@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Domains\Academic\Grade\Models\Grade;
 use App\Domains\Academic\ClassSection\Models\ClassSection;
 use App\Domains\Academic\AcademicYear\Models\AcademicYear;
+use App\Domains\Academic\Student\Enums\EnrollmentType;
 use App\Domains\Academic\Student\Enums\EnrollmentStatus;
 
 class StudentEnrollment extends Model
@@ -42,6 +43,7 @@ class StudentEnrollment extends Model
 
     protected $casts = [
         'status' => EnrollmentStatus::class,
+        'enrollment_type' => EnrollmentType::class,
         'enrollment_date' => 'date',
         'drop_date' => 'date',
     ];

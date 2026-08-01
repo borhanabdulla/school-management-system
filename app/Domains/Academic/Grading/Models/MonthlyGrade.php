@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Domains\Academic\CourseOffering\Models\CourseOffering;
 use App\Domains\Academic\Student\Models\Student;
 use App\Domains\Shared\Models\User;
+use App\Domains\Academic\Grading\Models\TemplateCategory;
 
 class MonthlyGrade extends Model
 {
@@ -49,6 +50,7 @@ class MonthlyGrade extends Model
         'course_offering_id',
         'gradebook_month_id',
         'category_key',
+        'template_category_id',
         'category',
         'score',
         'max_score',
@@ -83,6 +85,11 @@ class MonthlyGrade extends Model
     public function gradebookMonth(): BelongsTo
     {
         return $this->belongsTo(GradebookMonth::class, 'gradebook_month_id');
+    }
+
+    public function templateCategory(): BelongsTo
+    {
+        return $this->belongsTo(TemplateCategory::class);
     }
 
     public function grader(): BelongsTo

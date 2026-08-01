@@ -15,6 +15,14 @@ class AttendanceLookupService
      */
     public function getAttendanceSheetData(Timetable $timetable, string $date): Collection
     {
+        $termId = $timetable->term_id;
+        $academicYearId = $timetable->term?->academic_year_id
+            ?? $timetable->classSection?->academic_year_id;
+
+        if (!$termId || !$academicYearId) {
+            throw new \InvalidArgumentException('Attendance sheet requires termId and academicYearId.');
+        }
+
         // 1. جلب طلاب الشعبة (Active Only) مع ترتيب أبجدي
         $students = $timetable->classSection->students()
             ->active()
@@ -25,7 +33,8 @@ class AttendanceLookupService
         // نستخدم class_section_id و date و time_slot_id كمفتاح مركب
         $existingRecords = Attendance::where('class_section_id', $timetable->class_section_id)
             ->where('date', $date)
-            ->where('term_id', $timetable->term_id) // ✅ PR1: Scope by Term ID
+            ->where('academic_year_id', $academicYearId)
+            ->where('term_id', $termId) // ✅ PR1: Scope by Term ID
             ->where('time_slot_id', $timetable->time_slot_id)
             ->get()
             ->keyBy('student_id');
@@ -35,7 +44,8 @@ class AttendanceLookupService
         // جلب كل غيابات اليوم لهذه الشعبة (مرة واحدة لتقليل الاستعلامات)
         $allDayAbsences = Attendance::where('class_section_id', $timetable->class_section_id)
             ->where('date', $date)
-            ->where('term_id', $timetable->term_id) // ✅ PR1: Scope by Term ID
+            ->where('academic_year_id', $academicYearId)
+            ->where('term_id', $termId) // ✅ PR1: Scope by Term ID
             ->whereIn('status', [AttendanceStatus::ABSENT->value, AttendanceStatus::ESCAPED->value])
             ->get()
             ->groupBy('student_id');
@@ -76,8 +86,18 @@ class AttendanceLookupService
      * جلب حالة الحضور الأسبوعية للمعلم
      * ترجع مصفوفة مفهرسة بـ (التاريخ_رقم الحصة_الشعبة)
      */
-    public function getWeeklyAttendanceStatus(int $teacherId, string $startDate, string $endDate): array
+    public function getWeeklyAttendanceStatus(
+        int $teacherId,
+        string $startDate,
+        string $endDate,
+        ?int $termId = null,
+        ?int $academicYearId = null
+    ): array
     {
+        if (!$termId && !$academicYearId) {
+            throw new \InvalidArgumentException('Weekly attendance status requires termId or academicYearId.');
+        }
+
         // جلب كل سجلات الحضور لهذا المعلم في الفترة المحددة
         // ملاحظة: نفترض أن المعلم يرى الحضور الذي قام به أو الحضور لطلابه في حصصه
         // هنا سنبحث عن الحضور المرتبط بحصص هذا المعلم
@@ -88,6 +108,8 @@ class AttendanceLookupService
 
         $attendances = Attendance::query()
             ->whereBetween('date', [$startDate, $endDate])
+            ->when($academicYearId, fn($q) => $q->where('academic_year_id', $academicYearId))
+            ->when($termId, fn($q) => $q->where('term_id', $termId))
             ->whereHas('timeSlot', function ($q) {
                 $q->where('type', \App\Domains\Academic\Timetable\Enums\TimeSlotType::Academic);
             })

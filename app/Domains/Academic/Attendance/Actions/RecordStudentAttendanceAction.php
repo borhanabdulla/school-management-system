@@ -7,8 +7,10 @@ use App\Domains\Academic\Attendance\Events\StudentAttendanceSaved;
 use App\Domains\Academic\Attendance\Enums\AttendanceStatus;
 use App\Domains\Academic\Timetable\Models\Timetable;
 use App\Domains\Academic\Services\AcademicWriteGuard;
+use App\Domains\Shared\Models\User;
 use App\Infrastructure\Exceptions\InvalidOperationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RecordStudentAttendanceAction
 {
@@ -16,7 +18,13 @@ class RecordStudentAttendanceAction
      * حفظ البيانات (Bulk Upsert)
      * ✅ PR-5: Uses year-aware holiday check
      */
-    public function execute(Timetable $timetable, string $date, array $studentsData, int $recordedByUserId): void
+    public function execute(
+        Timetable $timetable,
+        string $date,
+        array $studentsData,
+        int $recordedByUserId,
+        ?string $overrideReason = null
+    ): void
     {
         // ✅ PR-5: Get academic year from timetable first
         $academicYearId = $timetable->classSection()->value('academic_year_id');
@@ -30,7 +38,25 @@ class RecordStudentAttendanceAction
         // ✅ PR-5: Calendar Guard - Prevent recording attendance on holidays for the correct year
         $calendarService = app(\App\Domains\Academic\Calendar\Services\SchoolCalendarService::class);
         if ($calendarService->isHolidayForYear($date, $academicYearId)) {
-            throw InvalidOperationException::make(__('attendance.cannot_record_on_holiday', ['date' => $date]));
+            $user = User::find($recordedByUserId);
+            $canOverride = $user?->can('attendance.override_holiday') || $user?->can('attendance.manage');
+            $reason = is_string($overrideReason) ? trim($overrideReason) : '';
+
+            if (!$canOverride) {
+                throw InvalidOperationException::make(__('attendance.cannot_record_on_holiday', ['date' => $date]));
+            }
+
+            if ($reason === '') {
+                throw InvalidOperationException::make(__('attendance.holiday_override_requires_reason'));
+            }
+
+            Log::notice('Attendance holiday override', [
+                'date' => $date,
+                'academic_year_id' => $academicYearId,
+                'timetable_id' => $timetable->id,
+                'recorded_by' => $recordedByUserId,
+                'reason' => $reason,
+            ]);
         }
 
         DB::transaction(function () use ($timetable, $date, $studentsData, $recordedByUserId, $academicYearId) {

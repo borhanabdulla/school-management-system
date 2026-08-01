@@ -65,16 +65,19 @@ final class AggregateGradebookToTemplateMarksAction
         }
 
         $monthIds = $months->pluck('id');
-        $mappingKeys = $mappings->pluck('category_key')->unique()->values();
+        $templateCategoryIds = $mappings->pluck('template_category_id')->unique()->values();
+        if ($templateCategoryIds->isEmpty()) {
+            return;
+        }
 
         $grades = MonthlyGrade::query()
             ->where('student_id', $studentId)
             ->where('course_offering_id', $offering->id)
             ->whereIn('gradebook_month_id', $monthIds)
-            ->whereIn('category_key', $mappingKeys)
-            ->get(['category_key', 'score', 'max_score', 'gradebook_month_id']);
+            ->whereIn('template_category_id', $templateCategoryIds)
+            ->get(['template_category_id', 'category_key', 'score', 'max_score', 'gradebook_month_id']);
 
-        $gradesByKey = $grades->groupBy('category_key');
+        $gradesByCategory = $grades->groupBy('template_category_id');
 
         $settings = GradebookSettings::where('academic_year_id', $academicYearId)->first();
         $categories = $settings
@@ -92,14 +95,15 @@ final class AggregateGradebookToTemplateMarksAction
                 continue;
             }
 
-            $templateCategory = $templateCategories->get($mapping->template_category_id);
+            $templateCategoryId = (int) $mapping->template_category_id;
+            $templateCategory = $templateCategories->get($templateCategoryId);
             if (! $templateCategory) {
                 continue;
             }
 
             $defaultMax = (float) ($categoryDefaults->get($categoryKey)['max_score'] ?? 0);
             $aggregation = $this->aggregate(
-                $gradesByKey->get($categoryKey, collect()),
+                $gradesByCategory->get($templateCategoryId, collect()),
                 $months,
                 (string) $mapping->aggregation_rule,
                 (string) $mapping->missing_months_policy,
