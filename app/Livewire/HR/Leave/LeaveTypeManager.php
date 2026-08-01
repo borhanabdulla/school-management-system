@@ -2,6 +2,9 @@
 
 namespace App\Livewire\HR\Leave;
 
+use App\Domains\HR\Leave\Actions\CreateLeaveTypeAction;
+use App\Domains\HR\Leave\Actions\UpdateLeaveTypeAction;
+use App\Domains\HR\Leave\Actions\DeleteLeaveTypeAction;
 use App\Domains\HR\Leave\Models\LeaveType;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -52,16 +55,20 @@ class LeaveTypeManager extends Component
         $this->validate();
 
         if ($this->editingId) {
-            $type = LeaveType::find($this->editingId);
-            $type->update($this->form);
+            $type = LeaveType::findOrFail($this->editingId);
+            app(UpdateLeaveTypeAction::class)->execute($type, $this->form);
         } else {
-            LeaveType::create($this->form);
+            app(CreateLeaveTypeAction::class)->execute($this->form);
         }
-
-        \App\Domains\HR\Leave\Services\LeaveLookupService::clearLeaveTypesCache();
 
         $this->showModal = false;
         $this->resetForm();
+    }
+
+    public function delete($id): void
+    {
+        $type = LeaveType::findOrFail($id);
+        app(DeleteLeaveTypeAction::class)->execute($type);
     }
 
     public function closeModal(): void

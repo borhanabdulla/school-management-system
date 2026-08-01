@@ -48,7 +48,7 @@ class StaffEdit extends Component
     #[Validate('required|date')]
     public string $joining_date = '';
 
-    #[Validate('required|in:active,on_leave,terminated')]
+    #[Validate('required|in:active,on_leave,terminated,resigned')]
     public string $status = 'active';
 
     // ============================================

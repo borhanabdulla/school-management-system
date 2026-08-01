@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Payroll;
 
+use App\Domains\HR\Payroll\Actions\CreateSalaryComponentAction;
+use App\Domains\HR\Payroll\Actions\UpdateSalaryComponentAction;
+use App\Domains\HR\Payroll\Actions\DeleteSalaryComponentAction;
 use App\Domains\HR\Payroll\Models\SalaryComponent;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -50,10 +53,11 @@ class SalaryComponentManager extends Component
         ];
 
         if ($this->editingId) {
-            SalaryComponent::find($this->editingId)->update($data);
+            $component = SalaryComponent::findOrFail($this->editingId);
+            app(UpdateSalaryComponentAction::class)->execute($component, $data);
             $this->dispatch('notify', 'تم تحديث البند بنجاح');
         } else {
-            SalaryComponent::create($data);
+            app(CreateSalaryComponentAction::class)->execute($data);
             $this->dispatch('notify', 'تم إضافة البند بنجاح');
         }
 
@@ -74,7 +78,8 @@ class SalaryComponentManager extends Component
 
     public function delete($id)
     {
-        SalaryComponent::find($id)->delete();
+        $component = SalaryComponent::findOrFail($id);
+        app(DeleteSalaryComponentAction::class)->execute($component);
         $this->dispatch('notify', 'تم حذف البند بنجاح');
     }
 
