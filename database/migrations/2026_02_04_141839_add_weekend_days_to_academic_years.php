@@ -11,16 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('academic_years', function (Blueprint $table) {
-            $table->json('weekend_days')->nullable()->after('status');
-        });
-
-        // Backfill with default Friday (5) and Saturday (6)
-        // using raw update for SQLite compatibility (json_encode)
-        \Illuminate\Support\Facades\DB::table('academic_years')
-            ->update(['weekend_days' => '[5,6]']);
-
-        Schema::table('academic_years', function (Blueprint $table) {
-            $table->json('weekend_days')->nullable(false)->change();
+            $table->json('weekend_days')->default('[5,6]');
         });
     }
 

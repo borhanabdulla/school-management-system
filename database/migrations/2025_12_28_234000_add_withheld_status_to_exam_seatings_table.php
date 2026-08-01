@@ -11,12 +11,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('exam_seatings', function (Blueprint $table) {
-            if (!Schema::hasColumn('exam_seatings', 'is_withheld')) {
-                $table->boolean('is_withheld')->default(false);
-            }
-            if (!Schema::hasColumn('exam_seatings', 'withhold_reason')) {
-                $table->string('withhold_reason')->nullable();
-            }
+            $table->boolean('is_withheld')->default(false);
+            $table->string('withhold_reason')->nullable();
         });
     }
 

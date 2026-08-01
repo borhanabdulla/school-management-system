@@ -7,10 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (!Schema::hasTable('academic_years')) {
-            return;
-        }
-
         DB::statement('DROP INDEX IF EXISTS academic_years_one_active_year');
         DB::statement("
             CREATE UNIQUE INDEX academic_years_one_active_year
@@ -21,10 +17,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        if (!Schema::hasTable('academic_years')) {
-            return;
-        }
-
         DB::statement('DROP INDEX IF EXISTS academic_years_one_active_year');
     }
 };

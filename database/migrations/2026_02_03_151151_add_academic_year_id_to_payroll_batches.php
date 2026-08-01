@@ -15,28 +15,11 @@ return new class extends Migration {
     {
         Schema::table('payroll_batches', function (Blueprint $table) {
             $table->foreignId('academic_year_id')
-                ->nullable() // nullable للتدرج في التحديث (backfill)
+                ->nullable()
                 ->after('name')
                 ->constrained('academic_years')
                 ->restrictOnDelete();
         });
-
-        // Backfill: محاولة ملء العمود بناءً على تاريخ بداية الفترة
-        // نفترض أن تاريخ البداية يقع ضمن نطاق سنة أكاديمية ما
-        // هذا إجراء SQL مباشر للتسهيل
-        $batches = \Illuminate\Support\Facades\DB::table('payroll_batches')->get();
-        foreach ($batches as $batch) {
-            $yearId = \Illuminate\Support\Facades\DB::table('academic_years')
-                ->where('start_date', '<=', $batch->period_start)
-                ->where('end_date', '>=', $batch->period_start)
-                ->value('id');
-
-            if ($yearId) {
-                \Illuminate\Support\Facades\DB::table('payroll_batches')
-                    ->where('id', $batch->id)
-                    ->update(['academic_year_id' => $yearId]);
-            }
-        }
     }
 
     public function down(): void
