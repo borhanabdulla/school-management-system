@@ -11,12 +11,13 @@ use App\Domains\Academic\ClassSection\Models\ClassSection;
 use App\Domains\Academic\CourseOffering\Models\CourseOffering;
 use App\Domains\Academic\Grading\Models\GradebookSettings;
 use App\Domains\Academic\Grading\Services\GradingHealthGate;
+use App\Domains\HR\Teacher\Models\Teacher;
 use App\Infrastructure\Exceptions\InvalidOperationException;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class GradingHealthGateMappingTest extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
 
     public function test_health_gate_blocks_when_mappings_are_missing(): void
     {
@@ -29,11 +30,14 @@ class GradingHealthGateMappingTest extends TestCase
             'academic_year_id' => $year->id,
         ]);
 
-        CourseOffering::factory()->create([
+        $teacher = Teacher::factory()->create();
+
+        CourseOffering::create([
             'academic_year_id' => $year->id,
             'term_id' => $term->id,
             'class_section_id' => $classSection->id,
             'subject_id' => $subject->id,
+            'teacher_id' => $teacher->id,
         ]);
 
         GradebookSettings::create([

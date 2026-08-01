@@ -24,10 +24,10 @@ final class TeacherGradebooksTest extends TestCase
 
     public function test_gradebooks_only_show_teacher_offerings(): void
     {
-        $this->createPermission('marks.view');
+        $this->createPermission('grading.view_gradebook');
 
         [$user, $teacher] = $this->createTeacherUser();
-        $user->givePermissionTo('marks.view');
+        $user->givePermissionTo('grading.view_gradebook');
 
         [$year, $term] = $this->createAcademicContext();
 
@@ -95,6 +95,32 @@ final class TeacherGradebooksTest extends TestCase
             'academic_year_id' => $year->id,
         ]);
 
+        $this->resetAcademicContext();
+
         return [$year, $term];
+    }
+
+    private function resetAcademicContext(): void
+    {
+        \Illuminate\Support\Facades\Cache::flush();
+
+        $context = \App\Infrastructure\Context\AcademicContextService::getInstance();
+        $reflection = new \ReflectionClass($context);
+
+        foreach (['cachedYear', 'cachedTerm', 'cachedSettings'] as $property) {
+            if (! $reflection->hasProperty($property)) {
+                continue;
+            }
+
+            $prop = $reflection->getProperty($property);
+            $prop->setAccessible(true);
+            $prop->setValue($context, null);
+        }
+
+        \Illuminate\Support\Facades\Cache::forget(\App\Infrastructure\Context\AcademicContextService::CACHE_KEY_YEAR);
+        \Illuminate\Support\Facades\Cache::forget(\App\Infrastructure\Context\AcademicContextService::CACHE_KEY_TERM);
+        \Illuminate\Support\Facades\Cache::forget(\App\Infrastructure\Context\AcademicContextService::CACHE_KEY_SETTINGS);
+        \Illuminate\Support\Facades\Cache::forget(\App\Infrastructure\Context\AcademicContextService::CACHE_KEY_TERM_ACTIVE_LIST);
+        \Illuminate\Support\Facades\Cache::forget(\App\Infrastructure\Context\AcademicContextService::CACHE_KEY_TERM_UPCOMING);
     }
 }

@@ -5,7 +5,10 @@ use App\Domains\Academic\AcademicYear\Models\AcademicYear;
 use App\Domains\Academic\Term\Models\Term;
 use App\Livewire\Academic\AcademicYearManager;
 use App\Livewire\Academic\TermManager;
+use App\Infrastructure\Security\SensitiveAccess;
+use App\Domains\Academic\Grading\Models\SystemSetting;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,8 +17,18 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->admin = User::factory()->create();
+    Permission::firstOrCreate(['name' => 'close.year']);
     $role = Role::firstOrCreate(['name' => 'admin']);
     $this->admin->assignRole($role);
+    $this->admin->givePermissionTo('close.year');
+
+    $hash = hash('sha256', 'test-code');
+    SystemSetting::set('sensitive.access_code_hash', $hash, 'security');
+    SystemSetting::set('sensitive.access_code_expires_at', now()->addHour()->toISOString(), 'security');
+    session([
+        SensitiveAccess::SESSION_HASH_KEY => $hash,
+        SensitiveAccess::SESSION_UNTIL_KEY => now()->addHour()->timestamp,
+    ]);
 });
 
 test('can create academic year', function () {

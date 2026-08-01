@@ -29,6 +29,7 @@ class AttendanceTest extends TestCase
         // Arrange: إعداد البيانات
         $user = User::factory()->create();
         $classSection = ClassSection::factory()->create();
+        $classSection->academicYear->update(['weekend_days' => json_encode([5, 6])]);
         $students = Student::factory()->count(3)->create([
             'current_class_section_id' => $classSection->id,
             'current_grade_id' => $classSection->grade_id,
@@ -54,7 +55,7 @@ class AttendanceTest extends TestCase
             'term_id' => $term->id,
         ]);
 
-        $date = now()->format('Y-m-d');
+        $date = '2024-02-05';
         $attendanceData = [
             ['student_id' => $students[0]->id, 'status' => 'present', 'delay_minutes' => 0, 'remarks' => null],
             ['student_id' => $students[1]->id, 'status' => 'absent', 'delay_minutes' => 0, 'remarks' => 'مريض'],
@@ -112,15 +113,18 @@ class AttendanceTest extends TestCase
     {
         $user = User::factory()->create();
         $classSection = ClassSection::factory()->create();
+        $classSection->academicYear->update(['weekend_days' => json_encode([5, 6])]);
         $student = Student::factory()->create();
+        $term = Term::factory()->create(['academic_year_id' => $classSection->academic_year_id]);
         $term = Term::factory()->create(['academic_year_id' => $classSection->academic_year_id]);
         $timeSlot = TimeSlot::factory()->create();
         $timetable = Timetable::factory()->create([
             'class_section_id' => $classSection->id,
             'time_slot_id' => $timeSlot->id,
+            'term_id' => $term->id,
         ]);
 
-        $date = now()->format('Y-m-d');
+        $date = '2024-02-05';
 
         // إنشاء سجل حضور أولي
         Attendance::create([

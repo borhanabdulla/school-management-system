@@ -234,6 +234,65 @@ test('it syncs attendance grade to monthly grade and student mark', function () 
     expect((float) $mark->scaled_score)->toBe(6.0);
 });
 
+test('it fails attendance sync when multiple attendance categories match', function () {
+    $academicYear = $this->academicYear;
+    $term = $this->term;
+    $grade = $this->grade;
+    $classSection = $this->classSection;
+    $subject = $this->subject;
+    $courseOffering = $this->courseOffering;
+
+    $student = Student::factory()->create([
+        'current_class_section_id' => $classSection->id,
+    ]);
+
+    $template = GradingTemplate::factory()->create();
+
+    TemplateCategory::factory()->create([
+        'grading_template_id' => $template->id,
+        'name' => 'مواظبة',
+        'weight' => 10,
+        'mapping_type' => 'attendance',
+    ]);
+
+    TemplateCategory::factory()->create([
+        'grading_template_id' => $template->id,
+        'name' => 'مواظبة',
+        'weight' => 5,
+        'mapping_type' => 'attendance',
+    ]);
+
+    SubjectGradingConfig::updateOrCreate([
+        'subject_id' => $subject->id,
+        'grade_id' => $grade->id,
+        'term_id' => $term->id,
+    ], [
+        'grading_template_id' => $template->id,
+        'max_score' => 100,
+        'pass_score' => 50,
+        'counts_in_gpa' => true,
+    ]);
+
+    $month = GradebookMonth::factory()->create([
+        'term_id' => $term->id,
+        'academic_year_id' => $academicYear->id,
+        'name' => 'سبتمبر',
+        'start_date' => '2025-09-01',
+        'end_date' => '2025-09-30',
+        'order' => 1,
+    ]);
+
+    $result = $this->service->syncAttendanceGrade($student, $classSection, $month);
+
+    expect($result->success)->toBeFalse();
+
+    $this->assertDatabaseMissing('monthly_grades', [
+        'student_id' => $student->id,
+        'course_offering_id' => $courseOffering->id,
+        'gradebook_month_id' => $month->id,
+    ]);
+});
+
 test('it blocks attendance sync when term is completed', function () {
     $academicYear = AcademicYear::factory()->create();
     $term = Term::factory()->create([
@@ -327,6 +386,7 @@ test('it aggregates monthly grades using mapping table', function () {
         'student_id' => $student->id,
         'course_offering_id' => $courseOffering->id,
         'gradebook_month_id' => $month->id,
+        'template_category_id' => $templateCategory->id,
         'category_key' => $categoryKey,
         'category' => $categoryLabel,
         'score' => 8,
@@ -417,11 +477,114 @@ test('it succeeds when monthly grade label differs from mapping label', function
         'student_id' => $student->id,
         'course_offering_id' => $courseOffering->id,
         'gradebook_month_id' => $month->id,
+        'template_category_id' => $templateCategory->id,
         'category_key' => $categoryKey,
         'category' => $enteredLabel,
         'score' => 8,
         'max_score' => 10,
     ]);
+
+    $result = $this->service->syncFromMonthlyGrade($monthlyGrade);
+
+    expect($result->success)->toBeTrue();
+
+    $mark = StudentMark::where('student_id', $student->id)
+        ->where('course_offering_id', $courseOffering->id)
+        ->where('template_category_id', $templateCategory->id)
+        ->first();
+
+    expect($mark)->not->toBeNull();
+});
+
+test('it preserves aggregation after monthly category key rename', function () {
+    $academicYear = $this->academicYear;
+    $term = Term::factory()->create(['academic_year_id' => $academicYear->id]);
+    $grade = Grade::factory()->create();
+    $classSection = ClassSection::factory()->create([
+        'grade_id' => $grade->id,
+        'academic_year_id' => $academicYear->id,
+    ]);
+    $subject = Subject::factory()->create();
+
+    $courseOffering = CourseOffering::factory()->create([
+        'class_section_id' => $classSection->id,
+        'subject_id' => $subject->id,
+        'term_id' => $term->id,
+        'academic_year_id' => $academicYear->id,
+    ]);
+
+    $template = GradingTemplate::factory()->create();
+
+    $templateCategory = TemplateCategory::factory()->create([
+        'grading_template_id' => $template->id,
+        'name' => 'أعمال السنة',
+        'mapping_type' => 'manual',
+        'weight' => 10,
+    ]);
+
+    SubjectGradingConfig::updateOrCreate([
+        'subject_id' => $subject->id,
+        'grade_id' => $grade->id,
+        'term_id' => $term->id,
+    ], [
+        'grading_template_id' => $template->id,
+        'max_score' => 100,
+        'pass_score' => 50,
+        'counts_in_gpa' => true,
+    ]);
+
+    $student = Student::factory()->create([
+        'current_class_section_id' => $classSection->id,
+    ]);
+
+    $originalKey = 'homework';
+    $originalLabel = 'واجبات';
+
+    GradebookSettings::updateOrCreate(
+        ['academic_year_id' => $academicYear->id],
+        ['monthly_categories' => GradebookSettings::normalizeMonthlyCategories([
+            ['key' => $originalKey, 'label' => $originalLabel, 'max_score' => 10],
+        ])]
+    );
+
+    $mapping = MonthlyCategoryMapping::create([
+        'academic_year_id' => $academicYear->id,
+        'term_id' => $term->id,
+        'grade_id' => $grade->id,
+        'subject_id' => $subject->id,
+        'category_key' => $originalKey,
+        'template_category_id' => $templateCategory->id,
+        'aggregation_rule' => 'sum',
+        'missing_months_policy' => 'ignore',
+    ]);
+
+    $month = GradebookMonth::factory()->create([
+        'term_id' => $term->id,
+        'academic_year_id' => $academicYear->id,
+    ]);
+
+    $monthlyGrade = MonthlyGrade::create([
+        'student_id' => $student->id,
+        'course_offering_id' => $courseOffering->id,
+        'gradebook_month_id' => $month->id,
+        'template_category_id' => $templateCategory->id,
+        'category_key' => $originalKey,
+        'category' => $originalLabel,
+        'score' => 8,
+        'max_score' => 10,
+    ]);
+
+    $renamedKey = 'assignments';
+    $renamedLabel = 'واجبات جديدة';
+
+    GradebookSettings::updateOrCreate(
+        ['academic_year_id' => $academicYear->id],
+        ['monthly_categories' => GradebookSettings::normalizeMonthlyCategories([
+            ['key' => $renamedKey, 'label' => $renamedLabel, 'max_score' => 10],
+        ])]
+    );
+
+    $mapping->update(['category_key' => $renamedKey]);
 
     $result = $this->service->syncFromMonthlyGrade($monthlyGrade);
 
@@ -586,6 +749,7 @@ test('it aggregates monthly grades across months and writes student mark', funct
         'student_id' => $student->id,
         'course_offering_id' => $courseOffering->id,
         'gradebook_month_id' => $month1->id,
+        'template_category_id' => $templateCategory->id,
         'category_key' => $categoryKey,
         'category' => $categoryLabel,
         'score' => 8,
@@ -595,6 +759,7 @@ test('it aggregates monthly grades across months and writes student mark', funct
         'student_id' => $student->id,
         'course_offering_id' => $courseOffering->id,
         'gradebook_month_id' => $month2->id,
+        'template_category_id' => $templateCategory->id,
         'category_key' => $categoryKey,
         'category' => $categoryLabel,
         'score' => 6,

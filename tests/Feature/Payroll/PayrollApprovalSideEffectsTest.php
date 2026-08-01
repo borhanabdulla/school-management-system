@@ -33,7 +33,9 @@ class PayrollApprovalSideEffectsTest extends TestCase
         $this->contract = Contract::factory()->create([
             'staff_id' => $this->staff->id,
             'start_date' => now()->subMonths(2),
+            'end_date' => now()->addMonths(2),
             'basic_salary' => 5000,
+            'status' => \App\Domains\HR\Payroll\Enums\ContractStatus::Active,
         ]);
     }
 
@@ -46,6 +48,7 @@ class PayrollApprovalSideEffectsTest extends TestCase
             'contract_id' => $this->contract->id,
             'name' => 'Performance Bonus',
             'amount' => 1000,
+            'type' => 'allowance',
             'is_one_time' => true,
             'consumed_at' => null,
         ]);

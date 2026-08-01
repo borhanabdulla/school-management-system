@@ -8,6 +8,7 @@ use App\Domains\Academic\ClassSection\Models\ClassSection;
 use App\Domains\Academic\Grade\Models\Grade;
 use App\Domains\Academic\Stage\Models\EducationalStage;
 use App\Domains\Academic\Student\Actions\AssignStudentToClassAction;
+use App\Domains\Academic\Student\Enums\EnrollmentType;
 use App\Domains\Academic\Student\Enums\StudentStatus;
 use App\Domains\Academic\Student\Models\Student;
 use App\Domains\Academic\Student\Models\StudentEnrollment;
@@ -58,7 +59,7 @@ class AssignStudentToClassEnrollmentTypeTest extends TestCase
         $enrollment = $action->execute($student, $section);
 
         $this->assertSame($section->id, $enrollment->class_section_id);
-        $this->assertSame('new', $enrollment->enrollment_type);
+        $this->assertSame(EnrollmentType::New, $enrollment->enrollment_type);
         $this->assertSame($year->id, $enrollment->academic_year_id);
         $this->assertSame($student->id, $enrollment->student_id);
     }

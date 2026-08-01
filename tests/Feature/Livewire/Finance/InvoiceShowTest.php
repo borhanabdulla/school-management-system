@@ -32,8 +32,10 @@ class InvoiceShowTest extends TestCase
 
         // 1. Setup Permissions
         $role = Role::create(['name' => 'accountant']);
-        $permission = Permission::create(['name' => 'finance.apply_discount']);
-        $role->givePermissionTo($permission);
+        $permissionView = Permission::create(['name' => 'finance.view']);
+        $permissionDiscount = Permission::create(['name' => 'finance.apply_discount']);
+        $role->givePermissionTo($permissionView);
+        $role->givePermissionTo($permissionDiscount);
 
         $this->accountant = User::factory()->create();
         $this->accountant->assignRole($role);

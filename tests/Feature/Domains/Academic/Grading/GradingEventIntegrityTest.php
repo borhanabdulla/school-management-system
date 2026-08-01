@@ -109,6 +109,7 @@ class GradingEventIntegrityTest extends TestCase
             'class_section_id' => $classSection->id,
             'course_offering_id' => $courseOffering->id,
             'time_slot_id' => $timeSlot->id,
+            'term_id' => $term->id,
         ]);
 
         // 2. Execute Action (Record Attendance as Absent)

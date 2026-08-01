@@ -267,6 +267,7 @@ class GradingTest extends TestCase
         $student = Student::factory()->create();
         $courseOffering = CourseOffering::factory()->create();
         $month = GradebookMonth::factory()->create();
+        $templateCategory = TemplateCategory::factory()->create();
 
         MonthlyGrade::factory()
             ->forStudent($student)
@@ -275,6 +276,7 @@ class GradingTest extends TestCase
             ->create([
                 'category' => 'تحريري',
                 'category_key' => \App\Domains\Academic\Grading\Models\GradebookSettings::generateCategoryKey('تحريري'),
+                'template_category_id' => $templateCategory->id,
             ]);
 
         $this->expectException(\Illuminate\Database\QueryException::class);
@@ -286,6 +288,7 @@ class GradingTest extends TestCase
             ->create([
                 'category' => 'تحريري',
                 'category_key' => \App\Domains\Academic\Grading\Models\GradebookSettings::generateCategoryKey('تحريري'),
+                'template_category_id' => $templateCategory->id,
             ]);
     }
 

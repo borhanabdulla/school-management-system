@@ -6,6 +6,7 @@ use App\Domains\Academic\AcademicYear\Models\AcademicYear;
 use App\Domains\Academic\Grade\Models\Grade;
 use App\Domains\Academic\Stage\Models\EducationalStage;
 use App\Domains\Academic\Student\Actions\PromoteStudentAction;
+use App\Domains\Academic\Student\Enums\EnrollmentType;
 use App\Domains\Academic\Student\Enums\StudentStatus;
 use App\Domains\Academic\Student\Models\Student;
 use App\Domains\Academic\Student\Models\StudentEnrollment;
@@ -52,7 +53,7 @@ class PromoteStudentActionTest extends TestCase
         $action = app(PromoteStudentAction::class);
         $enrollment = $action->execute($student, $nextYear, $nextGrade);
 
-        $this->assertSame('returning', $enrollment->enrollment_type);
+        $this->assertSame(EnrollmentType::Returning, $enrollment->enrollment_type);
         $this->assertSame($nextYear->id, $enrollment->academic_year_id);
         $this->assertSame($nextGrade->id, $enrollment->grade_id);
         $this->assertSame($student->id, $enrollment->student_id);

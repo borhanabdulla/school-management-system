@@ -8,6 +8,7 @@ use App\Domains\Academic\Term\Models\Term;
 use App\Domains\Academic\ClassSection\Models\ClassSection;
 use App\Domains\Academic\Timetable\Models\Timetable;
 use App\Domains\Academic\Attendance\Models\Attendance;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class AttendanceTermAwarenessTest extends TestCase
@@ -105,8 +106,18 @@ class AttendanceTermAwarenessTest extends TestCase
 
         $date = '2024-02-02'; // Friday
 
-        $student = \App\Domains\Academic\Student\Models\Student::factory()->create();
+        $student = \App\Domains\Academic\Student\Models\Student::factory()->create([
+            'status' => 'active',
+        ]);
         $this->classSection->students()->save($student);
+        $student->enrollments()->create([
+            'class_section_id' => $this->classSection->id,
+            'academic_year_id' => $this->academicYear->id,
+            'grade_id' => $this->classSection->grade_id,
+            'status' => 'active',
+            'enrollment_date' => now(),
+            'enrollment_type' => 'new',
+        ]);
 
         $data = [['student_id' => $student->id, 'status' => 'present', 'delay_minutes' => 0]];
 
@@ -122,8 +133,18 @@ class AttendanceTermAwarenessTest extends TestCase
     {
         $date = '2024-02-04'; // Sunday (Workday)
 
-        $student = \App\Domains\Academic\Student\Models\Student::factory()->create();
+        $student = \App\Domains\Academic\Student\Models\Student::factory()->create([
+            'status' => 'active',
+        ]);
         $this->classSection->students()->save($student);
+        $student->enrollments()->create([
+            'class_section_id' => $this->classSection->id,
+            'academic_year_id' => $this->academicYear->id,
+            'grade_id' => $this->classSection->grade_id,
+            'status' => 'active',
+            'enrollment_date' => now(),
+            'enrollment_type' => 'new',
+        ]);
 
         $data = [['student_id' => $student->id, 'status' => 'present']];
 
@@ -147,8 +168,18 @@ class AttendanceTermAwarenessTest extends TestCase
             'end_date' => '2024-12-31',
         ]);
 
-        $student = \App\Domains\Academic\Student\Models\Student::factory()->create();
+        $student = \App\Domains\Academic\Student\Models\Student::factory()->create([
+            'status' => 'active',
+        ]);
         $this->classSection->students()->save($student);
+        $student->enrollments()->create([
+            'class_section_id' => $this->classSection->id,
+            'academic_year_id' => $this->academicYear->id,
+            'grade_id' => $this->classSection->grade_id,
+            'status' => 'active',
+            'enrollment_date' => now(),
+            'enrollment_type' => 'new',
+        ]);
 
         Attendance::create([
             'student_id' => $student->id,
@@ -182,6 +213,73 @@ class AttendanceTermAwarenessTest extends TestCase
 
         $reportT2 = $service->getMonthlyReport($this->classSection->id, 8, 2024, $term2->id);
         $this->assertEquals(1, $reportT2['stats'][$student->id]['absences']);
+    }
+
+    public function test_attendance_holiday_override_requires_reason(): void
+    {
+        $user = \App\Domains\Shared\Models\User::factory()->create();
+        Permission::findOrCreate('attendance.manage');
+        $user->givePermissionTo('attendance.manage');
+
+        $student = \App\Domains\Academic\Student\Models\Student::factory()->create([
+            'status' => 'active',
+        ]);
+        $this->classSection->students()->save($student);
+        $student->enrollments()->create([
+            'class_section_id' => $this->classSection->id,
+            'academic_year_id' => $this->academicYear->id,
+            'grade_id' => $this->classSection->grade_id,
+            'status' => 'active',
+            'enrollment_date' => now(),
+            'enrollment_type' => 'new',
+        ]);
+
+        $data = [['student_id' => $student->id, 'status' => 'present', 'delay_minutes' => 0]];
+
+        $this->expectException(\App\Infrastructure\Exceptions\InvalidOperationException::class);
+        app(\App\Domains\Academic\Attendance\Actions\RecordStudentAttendanceAction::class)
+            ->execute($this->timetable, '2024-02-02', $data, $user->id);
+    }
+
+    public function test_attendance_holiday_override_allows_with_permission_and_reason(): void
+    {
+        $user = \App\Domains\Shared\Models\User::factory()->create();
+        Permission::findOrCreate('attendance.manage');
+        $user->givePermissionTo('attendance.manage');
+
+        $student = \App\Domains\Academic\Student\Models\Student::factory()->create([
+            'status' => 'active',
+        ]);
+        $this->classSection->students()->save($student);
+        $student->enrollments()->create([
+            'class_section_id' => $this->classSection->id,
+            'academic_year_id' => $this->academicYear->id,
+            'grade_id' => $this->classSection->grade_id,
+            'status' => 'active',
+            'enrollment_date' => now(),
+            'enrollment_type' => 'new',
+        ]);
+
+        $date = '2024-02-02';
+        $data = [['student_id' => $student->id, 'status' => 'present', 'delay_minutes' => 0]];
+
+        app(\App\Domains\Academic\Attendance\Actions\RecordStudentAttendanceAction::class)
+            ->execute($this->timetable, $date, $data, $user->id, 'موافقة استثنائية');
+
+        $this->assertDatabaseHas('attendances', [
+            'student_id' => $student->id,
+            'date' => $date,
+            'term_id' => $this->term1->id,
+            'status' => 'present',
+        ]);
+    }
+
+    public function test_attendance_report_requires_term_id(): void
+    {
+        $service = app(\App\Domains\Academic\Attendance\Services\AttendanceReportService::class);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $service->getMonthlyReport($this->classSection->id, 2, 2024, null);
     }
 
     public function test_attendance_report_respects_weekend_days_config()

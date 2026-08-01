@@ -17,11 +17,11 @@ use App\Domains\Academic\Grading\Models\SubjectGradingConfig;
 use App\Domains\Academic\Grading\Listeners\SyncMonthlyToStudentMark;
 use App\Domains\Academic\Grading\Events\MonthlyGradeSaved;
 use App\Domains\Academic\Student\Models\Student;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class MonthlyGradeSavedListenerTest extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
 
     public function test_listener_aggregates_monthly_grades_into_student_mark(): void
     {
@@ -88,6 +88,7 @@ class MonthlyGradeSavedListenerTest extends TestCase
             'student_id' => $student->id,
             'course_offering_id' => $offering->id,
             'gradebook_month_id' => $month1->id,
+            'template_category_id' => $templateCategory->id,
             'category_key' => $categoryKey,
             'category' => 'واجبات',
             'score' => 8,
@@ -98,6 +99,7 @@ class MonthlyGradeSavedListenerTest extends TestCase
             'student_id' => $student->id,
             'course_offering_id' => $offering->id,
             'gradebook_month_id' => $month2->id,
+            'template_category_id' => $templateCategory->id,
             'category_key' => $categoryKey,
             'category' => 'واجبات',
             'score' => 6,

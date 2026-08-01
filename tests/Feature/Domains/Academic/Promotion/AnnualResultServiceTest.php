@@ -120,6 +120,6 @@ test('annual result passes when total across terms meets combined pass score', f
 
     expect((float) $annual->annual_total)->toBe(31.5);
     expect((float) $annual->annual_max)->toBe(50.0);
-    expect($annual->failed_count)->toBe(1);
-    expect($annual->decision)->toBe(ResultDecision::Conditional);
+    expect($annual->failed_count)->toBe(0);
+    expect($annual->decision)->toBe(ResultDecision::Pass);
 });

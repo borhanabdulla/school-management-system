@@ -39,6 +39,8 @@ class PayrollWorkflowGuardTest extends TestCase
             'staff_id' => $this->staff->id,
             'basic_salary' => 5000,
             'start_date' => now()->startOfYear(),
+            'end_date' => now()->endOfYear(),
+            'status' => \App\Domains\HR\Payroll\Enums\ContractStatus::Active,
         ]);
 
         // Generate Batch (Draft)

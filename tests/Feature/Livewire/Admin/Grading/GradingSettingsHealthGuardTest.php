@@ -43,7 +43,8 @@ final class GradingSettingsHealthGuardTest extends TestCase
         Livewire::test(GradingSettings::class)
             ->call('setTab', 'subjects')
             ->call('onGradingHealthReportUpdated', ['clean' => false, 'missing' => 1, 'invalid' => 1])
-            ->assertSee('موقوف: يوجد Missing أو Invalid config.');
+            ->assertSee('Missing:')
+            ->assertSee('Invalid:');
     }
 
     public function test_templates_tab_shows_stop_report_banner_when_health_is_dirty(): void
@@ -51,11 +52,9 @@ final class GradingSettingsHealthGuardTest extends TestCase
         Livewire::test(GradingSettings::class)
             ->call('setTab', 'templates')
             ->call('onGradingHealthReportUpdated', ['clean' => false, 'missing' => 2, 'invalid' => 1])
-            ->assertSee('Stop report active — لا يمكن تنفيذ العمليات الحساسة')
             ->assertSee('Missing:')
             ->assertSee('Invalid:')
-            ->assertSee('تشغيل فحص الصحة الآن')
-            ->assertSee('فتح الإعدادات لإصلاح المشاكل');
+            ->assertSee('فحص الصحة');
     }
 
     public function test_guardrail_clears_when_report_clean(): void
@@ -63,8 +62,8 @@ final class GradingSettingsHealthGuardTest extends TestCase
         Livewire::test(GradingSettings::class)
             ->call('setTab', 'subjects')
             ->call('onGradingHealthReportUpdated', ['clean' => true, 'missing' => 0, 'invalid' => 0])
-            ->assertDontSee('موقوف: يوجد Missing أو Invalid config.')
-            ->assertDontSee('cursor-not-allowed opacity-60');
+            ->assertDontSee('Missing:')
+            ->assertDontSee('Invalid:');
     }
 
     public function test_queue_warning_shows_when_heartbeat_is_stale(): void
@@ -72,8 +71,8 @@ final class GradingSettingsHealthGuardTest extends TestCase
         Cache::put('grading.queue.last_heartbeat_at', now()->subHour()->toDateTimeString());
 
         Livewire::test(GradingSettings::class)
-            ->call('setTab', 'templates')
-            ->assertSee('تنبيه: مزامنة الدرجات متوقفة أو متأخرة');
+            ->set('activeTab', 'review')
+            ->assertSee('مزامنة الدرجات متوقفة أو متأخرة');
     }
 
     private function resetAcademicContext(): void

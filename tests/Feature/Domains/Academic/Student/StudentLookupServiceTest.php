@@ -161,8 +161,19 @@ class StudentLookupServiceTest extends TestCase
             'status' => 'inactive'
         ]);
 
+        foreach ([$student1, $student2, $inactiveStudent] as $student) {
+            $student->enrollments()->create([
+                'class_section_id' => $section->id,
+                'academic_year_id' => $section->academic_year_id,
+                'grade_id' => $section->grade_id,
+                'status' => 'active',
+                'enrollment_date' => now(),
+                'enrollment_type' => 'new',
+            ]);
+        }
+
         $service = app(StudentLookupService::class);
-        $results = $service->getByClassSection($section->id);
+        $results = $service->getByClassSection($section->id, $section->academic_year_id);
 
         $this->assertCount(2, $results);
         $this->assertEquals($student1->id, $results->first()->id);
