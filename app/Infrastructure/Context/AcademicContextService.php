@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Infrastructure\Context;
 
 use App\Domains\Academic\AcademicYear\Models\AcademicYear;
+use App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus;
 use App\Domains\Academic\Term\Models\Term;
+use App\Domains\Academic\Term\Enums\TermStatus;
 use App\Domains\Academic\Grading\Models\SystemSetting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
@@ -117,7 +119,7 @@ class AcademicContextService
     {
         // 1. Check In-Memory Cache
         if ($this->cachedYear !== null) {
-            if ($this->cachedYear->status !== \App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus::Active) {
+            if ($this->cachedYear->status !== AcademicYearStatus::Active) {
                 $this->cachedYear = null;
                 Cache::forget(self::CACHE_KEY_YEAR);
             } else {
@@ -130,15 +132,15 @@ class AcademicContextService
             self::CACHE_KEY_YEAR,
             self::CACHE_TTL,
             fn() => AcademicYear::query()
-                ->where('status', 'active')
+                ->where('status', AcademicYearStatus::Active)
                 ->with(['terms' => fn($q) => $q->orderBy('order_index')])
                 ->first()
         );
 
-        if ($this->cachedYear && $this->cachedYear->status !== \App\Domains\Academic\AcademicYear\Enums\AcademicYearStatus::Active) {
+        if ($this->cachedYear && $this->cachedYear->status !== AcademicYearStatus::Active) {
             Cache::forget(self::CACHE_KEY_YEAR);
             $this->cachedYear = AcademicYear::query()
-                ->where('status', 'active')
+                ->where('status', AcademicYearStatus::Active)
                 ->with(['terms' => fn($q) => $q->orderBy('order_index')])
                 ->first();
         }
@@ -195,7 +197,7 @@ class AcademicContextService
             self::CACHE_TTL,
             fn() => Term::query()
                 ->where('academic_year_id', $this->activeYearId())
-                ->where('status', 'active')
+                ->where('status', TermStatus::Active)
                 ->first()
         );
 

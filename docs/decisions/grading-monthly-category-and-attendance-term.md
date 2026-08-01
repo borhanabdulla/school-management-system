@@ -84,6 +84,7 @@ Attendance sync:
 
 ### Related
 
+- docs/grading/stop_report_monthly_category_key.md
 - docs/grading/stop_report_attendance_term_key.md
 - docs/grading/stop_report_student_marks_term_key.md
 

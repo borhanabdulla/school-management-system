@@ -13,8 +13,8 @@ Single source of truth (intended)
 
 Definitions
 - Calendar year (current year): derived from `now()->year`. This is NOT the academic year.
-- Active academic year: `academic_years.status = active` (via `school()->activeYear()`), with cached context and term links.
-- Active term: `terms.status = active` AND belongs to active academic year (via `school()->activeTerm()`).
+- Active academic year: `academic_years.status = AcademicYearStatus::Active` (via `school()->activeYear()`), with cached context and term links.
+- Active term: `terms.status = TermStatus::Active` AND belongs to active academic year (via `school()->activeTerm()`).
 
 When to use which
 - Use `school()->activeYearId()` for academic data scoped by academic year (enrollments, class sections, course offerings, attendance reports, grading, timetable).

@@ -49,7 +49,7 @@ class BackfillAttendanceTimetableIdCommand extends Command
     private int $errors = 0;
     private int $ambiguous = 0;
     private int $noMatch = 0;
-
+    
     /**
      * Execute the console command.
      */

@@ -51,6 +51,10 @@ final class SensitiveAccess
             return false;
         }
 
+        if (! $request->hasSession()) {
+            return false;
+        }
+
         $request->session()->put(self::SESSION_HASH_KEY, $active['hash']);
         $request->session()->put(self::SESSION_UNTIL_KEY, $active['expires_at']->timestamp);
 
@@ -62,6 +66,10 @@ final class SensitiveAccess
         $active = self::getActiveCode();
 
         if (!$active || now()->greaterThan($active['expires_at'])) {
+            return false;
+        }
+
+        if (! $request->hasSession()) {
             return false;
         }
 

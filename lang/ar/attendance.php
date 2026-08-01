@@ -4,6 +4,7 @@ return [
     // Calendar & Holiday Guards
     'cannot_record_on_holiday' => 'لا يمكن تسجيل الحضور في يوم عطلة (:date).',
     'holiday_warning' => 'هذا اليوم عطلة رسمية. لا يمكن تسجيل الحضور.',
+    'holiday_override_requires_reason' => 'سبب تسجيل الحضور في يوم عطلة مطلوب.',
 
     // Term Awareness
     'cannot_record_non_active_term' => 'لا يمكن تسجيل الحضور لترم غير نشط.',
