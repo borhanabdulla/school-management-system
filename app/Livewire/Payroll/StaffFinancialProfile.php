@@ -4,6 +4,7 @@ namespace App\Livewire\Payroll;
 
 use App\Domains\HR\Staff\Models\Staff;
 use App\Domains\HR\Payroll\Models\PayrollItem;
+use App\Domains\HR\Payroll\Enums\ContractStatus;
 use Livewire\Component;
 
 class StaffFinancialProfile extends Component
@@ -19,7 +20,7 @@ class StaffFinancialProfile extends Component
     {
         // Use loaded contracts collection
         $activeContract = $this->staff->contracts
-            ->where('status', 'active')
+            ->where('status', ContractStatus::Active)
             ->sortByDesc('start_date')
             ->first();
 

@@ -7,6 +7,7 @@ use App\Infrastructure\Traits\HandlesSafeDelete;
 use App\Infrastructure\Traits\HasModelLabels;
 use App\Domains\Academic\Student\Models\Student;
 use App\Domains\Academic\AcademicYear\Models\AcademicYear;
+use App\Domains\Finance\Enums\InvoiceStatus;
 
 class Invoice extends Model
 {
@@ -90,24 +91,29 @@ class Invoice extends Model
 
     public function scopePaid($query)
     {
-        return $query->where('invoices.status', \App\Domains\Finance\Enums\InvoiceStatus::Paid);
+        return $query->where('invoices.status', InvoiceStatus::Paid);
     }
 
     public function scopeNotPaid($query)
     {
-        return $query->where('invoices.status', '!=', \App\Domains\Finance\Enums\InvoiceStatus::Paid);
+        return $query->where('invoices.status', '!=', InvoiceStatus::Paid);
+    }
+
+    public function scopeNotCancelled($query)
+    {
+        return $query->where('invoices.status', '!=', InvoiceStatus::Cancelled);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('invoices.status', \App\Domains\Finance\Enums\InvoiceStatus::Cancelled);
+        return $query->where('invoices.status', InvoiceStatus::Cancelled);
     }
 
     public function scopeOutstanding($query)
     {
         return $query->whereNotIn('invoices.status', [
-            \App\Domains\Finance\Enums\InvoiceStatus::Paid,
-            \App\Domains\Finance\Enums\InvoiceStatus::Cancelled
+            InvoiceStatus::Paid,
+            InvoiceStatus::Cancelled
         ]);
     }
 }

@@ -50,7 +50,7 @@ class PayrollValidationService
         }
 
         // 3️⃣ تحذير: طلبات إجازة معلقة
-        $pendingLeaves = LeaveRequest::where('status', 'pending')
+        $pendingLeaves = LeaveRequest::pending()
             ->where(function ($q) use ($start) {
                 $q->whereMonth('start_date', $start->month)
                     ->whereYear('start_date', $start->year);

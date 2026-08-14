@@ -3,8 +3,8 @@
 namespace App\Domains\HR\Payroll\Services;
 
 use App\Domains\HR\Payroll\Enums\PayrollBatchStatus;
+use App\Domains\HR\Payroll\Enums\ContractStatus;
 use App\Domains\HR\Payroll\Models\PayrollBatch;
-use Illuminate\Support\Facades\DB;
 
 /**
  * خدمة تقارير الرواتب
@@ -63,12 +63,12 @@ class PayrollReportService
      */
     public function getCostDistribution(): array
     {
-        $basicTotal = \App\Domains\HR\Payroll\Models\Contract::where('status', 'active')
+        $basicTotal = \App\Domains\HR\Payroll\Models\Contract::active()
             ->sum('basic_salary');
 
         // استخدام Eloquent Relationships بدلاً من DB::table
         $allowancesTotal = \App\Domains\HR\Payroll\Models\ContractItem::whereHas('contract', function ($q) {
-            $q->where('status', 'active');
+            $q->where('status', ContractStatus::Active);
         })
             ->where('type', 'allowance')
             ->where('is_one_time', false) // فقط البدلات الشهرية

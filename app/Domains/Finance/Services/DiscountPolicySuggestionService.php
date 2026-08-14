@@ -52,7 +52,7 @@ class DiscountPolicySuggestionService
         // نعد الـ student_id المميزين من الفواتير المرتبطة بهذا الولي والسنة
         $payerStudentCount = Invoice::where('payer_guardian_id', $invoice->payer_guardian_id)
             ->where('academic_year_id', $invoice->academic_year_id)
-            ->where('status', '!=', 'cancelled') // تجاهل الملغاة
+            ->notCancelled() // تجاهل الملغاة
             ->distinct('student_id')
             ->count('student_id');
 

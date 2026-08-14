@@ -24,14 +24,14 @@ class YearEndReportService
     {
         // 1. Total Invoiced Net (excluding cancelled)
         $invoicedNet = Invoice::where('academic_year_id', $academicYearId)
-            ->where('status', '!=', 'cancelled')
+            ->notCancelled()
             ->sum('total_amount'); // total_amount IS net in our SST
 
         // 2. Total Discounts (for audit/display only - from discount applications)
         $discountApplications = DiscountApplication::whereHas('invoiceItem', function ($q) use ($academicYearId) {
             $q->whereHas('invoice', function ($q2) use ($academicYearId) {
                 $q2->where('academic_year_id', $academicYearId)
-                    ->where('status', '!=', 'cancelled');
+                    ->notCancelled();
             });
         })->sum('applied_amount');
 
@@ -42,7 +42,7 @@ class YearEndReportService
             $q->where('academic_year_id', $academicYearId);
             // Even if invoice is cancelled? Usually cancelled invoice has no payments or payments refunded.
             // But let's exclude cancelled invoices to be safe.
-            $q->where('status', '!=', 'cancelled');
+            $q->notCancelled();
         })->sum('amount');
 
         // 4. Outstanding
@@ -63,7 +63,7 @@ class YearEndReportService
     {
         // Use SQL for aggregation for performance
         $results = Invoice::where('academic_year_id', $academicYearId)
-            ->where('status', '!=', 'cancelled')
+            ->notCancelled()
             ->selectRaw('
                 payer_guardian_id,
                 SUM(total_amount) as total_net,
@@ -93,7 +93,7 @@ class YearEndReportService
     public function outstandingByStudent(int $academicYearId): array
     {
         $results = Invoice::where('academic_year_id', $academicYearId)
-            ->where('status', '!=', 'cancelled')
+            ->notCancelled()
             ->selectRaw('
                 student_id,
                 SUM(total_amount) as total_net,
@@ -122,7 +122,7 @@ class YearEndReportService
     {
         // Get all students with outstanding > 0
         $studentsWithDebt = Invoice::where('academic_year_id', $academicYearId)
-            ->where('status', '!=', 'cancelled')
+            ->notCancelled()
             ->selectRaw('student_id, SUM(CASE WHEN (total_amount - paid_amount) > 0 THEN (total_amount - paid_amount) ELSE 0 END) as balance')
             ->groupBy('student_id')
             ->having('balance', '>', 0)

@@ -99,13 +99,13 @@ class Teacher extends Model
     // ✅ يستخدم status بدلاً من termination_date (غير موجود في DB)
     public function scopeActive(Builder $query): void
     {
-        $query->whereHas('staff', fn($q) => $q->where('status', 'active'));
+        $query->whereHas('staff', fn($q) => $q->active());
     }
 
     // 1b. المدرسين ضمن النظام (نشط أو في إجازة، للإدارة)
     public function scopeEmployed(Builder $query): void
     {
-        $query->whereHas('staff', fn($q) => $q->whereIn('status', ['active', 'on_leave']));
+        $query->whereHas('staff', fn($q) => $q->employed());
     }
 
     // 2. الأداة الثانية: المدرسين المتخصصين في مادة معينة

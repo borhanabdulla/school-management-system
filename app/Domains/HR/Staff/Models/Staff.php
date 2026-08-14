@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Domains\HR\Staff\Enums\StaffStatus;
 
 class Staff extends Model
 {
@@ -150,7 +151,16 @@ class Staff extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('status', \App\Domains\HR\Staff\Enums\StaffStatus::Active);
+        return $query->where('status', StaffStatus::Active);
+    }
+
+
+    /**
+     * Scope: الموظفون القابلون للإسناد (نشط أو في إجازة)
+     */
+    public function scopeEmployed($query)
+    {
+        return $query->whereIn('status', [StaffStatus::Active, StaffStatus::OnLeave]);
     }
 
     /**

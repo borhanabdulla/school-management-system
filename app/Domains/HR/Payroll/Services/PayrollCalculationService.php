@@ -13,6 +13,7 @@ use App\Domains\HR\Payroll\Models\LoanInstallment;
 use App\Domains\HR\Substitution\Services\SubstitutionService;
 use App\Domains\HR\Attendance\Services\AttendanceSummaryService;
 use App\Domains\HR\Payroll\Enums\PayrollItemType;
+use App\Domains\HR\Payroll\Enums\LoanStatus;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -213,9 +214,9 @@ class PayrollCalculationService
     protected function getDueLoanInstallments(Staff $staff, Carbon $periodStart): Collection
     {
         return LoanInstallment::whereHas('loan', function ($q) use ($staff) {
-            $q->where('staff_id', $staff->id)->where('status', 'approved');
+            $q->where('staff_id', $staff->id)->where('status', LoanStatus::Approved);
         })
-            ->where('status', 'pending')
+            ->pending()
             ->whereYear('due_date', $periodStart->year)
             ->whereMonth('due_date', $periodStart->month)
             ->get();

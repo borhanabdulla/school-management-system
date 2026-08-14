@@ -50,7 +50,7 @@ class SubstitutionService
         // جلب جميع المعلمين النشطين
         // ✅ يستخدم status بدلاً من termination_date (غير موجود في DB)
         $query = Teacher::with(['staff', 'courseOfferings.subject'])
-            ->whereHas('staff', fn($q) => $q->where('status', 'active'));
+            ->active();
 
         // 1. فلتر التخصص (على مستوى الاستعلام لتقليل البيانات)
         if ($filters['same_specialization'] && $targetSubject) { // هنا اذا الفلتر نفس الماده ونفس التخصص 

@@ -66,7 +66,7 @@ class HRDashboardService
             $startDate = now()->startOfDay();
             $endDate = now()->addDays(7)->endOfDay();
 
-            return LeaveRequest::where('status', 'approved')
+            return LeaveRequest::approved()
                 ->where(function ($query) use ($startDate, $endDate) {
                     $query->whereBetween('start_date', [$startDate, $endDate])
                         ->orWhereBetween('end_date', [$startDate, $endDate])
@@ -95,7 +95,7 @@ class HRDashboardService
             $urgentDate = now()->addDay();
             $oldDate = now()->subHours(48);
 
-            $stats = LeaveRequest::where('status', 'pending')
+            $stats = LeaveRequest::pending()
                 ->selectRaw("
                     COUNT(*) as total,
                     SUM(CASE WHEN start_date <= ? THEN 1 ELSE 0 END) as urgent,
@@ -125,7 +125,7 @@ class HRDashboardService
             $dayOfWeek = $targetDate->dayOfWeek;
 
             // 1. جلب الإجازات المعتمدة لهذا اليوم
-            $approvedLeaves = LeaveRequest::where('status', 'approved')
+            $approvedLeaves = LeaveRequest::approved()
                 ->whereDate('start_date', '<=', $targetDate)
                 ->whereDate('end_date', '>=', $targetDate)
                 ->with([
@@ -217,7 +217,7 @@ class HRDashboardService
             $endOfMonth = $calendarDate->copy()->endOfMonth();
 
             // جلب الإجازات المعتمدة للشهر
-            $leaves = LeaveRequest::where('status', 'approved')
+            $leaves = LeaveRequest::approved()
                 ->where(function ($query) use ($startOfMonth, $endOfMonth) {
                     $query->whereBetween('start_date', [$startOfMonth, $endOfMonth])
                         ->orWhereBetween('end_date', [$startOfMonth, $endOfMonth])
@@ -366,7 +366,7 @@ class HRDashboardService
             $totalStaff = Staff::count();
             $onLeaveToday = LeaveRequest::whereDate('start_date', '<=', now())
                 ->whereDate('end_date', '>=', now())
-                ->where('status', 'approved')
+                ->approved()
                 ->count();
 
             $pendingStats = $this->getPendingStats();
@@ -478,7 +478,7 @@ class HRDashboardService
      */
     public function getPendingRequests(int $limit = 5): Collection
     {
-        return LeaveRequest::where('status', 'pending')
+        return LeaveRequest::pending()
             ->with(['staff', 'leaveType'])
             ->orderBy('created_at', 'asc')
             ->take($limit)

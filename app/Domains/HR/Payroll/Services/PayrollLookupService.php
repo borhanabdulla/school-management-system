@@ -4,6 +4,7 @@ namespace App\Domains\HR\Payroll\Services;
 
 use App\Domains\HR\Payroll\Models\PayrollBatch;
 use App\Domains\HR\Payroll\Models\PayrollRecord;
+use App\Domains\HR\Payroll\Enums\PayrollBatchStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -49,7 +50,7 @@ class PayrollLookupService
             ->with('batch')
             ->where('staff_id', $staffId)
             ->whereHas('batch', function ($q) {
-                $q->where('status', 'paid');
+                $q->where('status', PayrollBatchStatus::Paid);
             })
             ->latest()
             ->limit($limit)

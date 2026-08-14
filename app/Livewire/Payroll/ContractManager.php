@@ -6,6 +6,7 @@ use App\Domains\HR\Payroll\Models\Contract;
 use App\Domains\HR\Staff\Models\Staff;
 use App\Domains\HR\Payroll\Models\ContractItem;
 use App\Domains\HR\Payroll\Services\ContractService;
+use App\Domains\HR\Payroll\Enums\ContractStatus;
 use App\Domains\HR\Payroll\Models\SalaryComponent;
 use App\Domains\HR\Payroll\Exceptions\PeriodLockedException;
 use App\Domains\HR\Payroll\Services\PayrollPeriodLockService;
@@ -145,7 +146,7 @@ class ContractManager extends Component
                 // Check for existing active contract
                 if (!$this->confirmedChaining) {
                     $hasActive = Contract::where('staff_id', $this->form['staff_id'])
-                        ->where('status', 'active')
+                        ->where('status', ContractStatus::Active)
                         ->exists();
 
                     if ($hasActive) {
